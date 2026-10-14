@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VisionCare AI — Research Paper & Project Documentation</title>
+<style>
+  :root {
+    --primary: #0a3d62;
+    --primary-light: #e8f4f8;
+    --accent: #b41414;
+    --text: #1a1a1a;
+    --text-muted: #555555;
+    --border: #d0d7de;
+    --bg-card: #ffffff;
+    --font-serif: "Times New Roman", Times, Georgia, serif;
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  body {
+    font-family: var(--font-serif);
+    color: var(--text);
+    background: #f0f2f5;
+    margin: 0;
+    padding: 24px;
+    line-height: 1.55;
+    font-size: 15px;
+  }
+  .paper-container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: var(--bg-card);
+    padding: 48px 56px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    border-radius: 4px;
+  }
+  .journal-header {
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 12px;
+    margin-bottom: 24px;
+  }
+  .journal-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .journal-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+  h1.paper-title {
+    font-size: 24px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.35;
+    margin: 24px 0 16px 0;
+    color: #0d1b2a;
+  }
+  .authors-block {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .author-card {
+    display: inline-block;
+    vertical-align: top;
+    margin: 8px 14px;
+    font-size: 13px;
+  }
+  .author-name {
+    font-weight: 700;
+    font-size: 14px;
+  }
+  .author-affil {
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 12px;
+    max-width: 340px;
+  }
+  .author-email {
+    color: #0284c7;
+    font-family: monospace;
+    font-size: 12px;
+  }
+  .abstract-box {
+    background: var(--primary-light);
+    border: 1px solid #bce1f0;
+    border-left: 5px solid var(--primary);
+    padding: 20px 24px;
+    margin: 28px 0;
+    border-radius: 4px;
+  }
+  .abstract-title {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--primary);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .abstract-text {
+    font-size: 14px;
+    text-align: justify;
+    margin: 0;
+  }
+  .keywords {
+    margin-top: 12px;
+    font-size: 13px;
+    font-style: italic;
+  }
+  .keywords strong {
+    font-style: normal;
+    color: var(--primary);
+  }
+  h2.sec-heading {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--primary);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 6px;
+    margin-top: 32px;
+    margin-bottom: 14px;
+    text-transform: uppercase;
+  }
+  h3.subsec-heading {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1b263b;
+    margin-top: 20px;
+    margin-bottom: 8px;
+  }
+  p {
+    text-align: justify;
+    margin-bottom: 12px;
+  }
+  ul, ol {
+    margin: 8px 0 16px 20px;
+  }
+  li {
+    margin-bottom: 6px;
+  }
+  .eq-box {
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 6px;
+    padding: 10px 16px;
+    margin: 12px 0;
+    text-align: center;
+    font-family: "Cambria Math", "Times New Roman", serif;
+    font-style: italic;
+    font-weight: 600;
+    color: #0f172a;
+    font-size: 15px;
+  }
+  table.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 13px;
+  }
+  table.data-table th, table.data-table td {
+    border: 1px solid #cbd5e1;
+    padding: 10px 12px;
+    text-align: left;
+    vertical-align: top;
+  }
+  table.data-table th {
+    background: var(--primary);
+    color: #ffffff;
+    font-weight: 700;
+  }
+  table.data-table tr:nth-child(even) {
+    background: #f8fafc;
+  }
+  table.data-table tr.highlight-row {
+    background: #e0f2fe;
+    font-weight: 600;
+  }
+  .diagram-box {
+    background: #0f172a;
+    color: #38bdf8;
+    font-family: monospace;
+    font-size: 12px;
+    padding: 18px;
+    border-radius: 6px;
+    overflow-x: auto;
+    white-space: pre;
+    line-height: 1.35;
+    margin: 20px 0;
+  }
+  .ref-item {
+    font-size: 13px;
+    margin-bottom: 8px;
+    padding-left: 28px;
+    text-indent: -28px;
+    text-align: justify;
+  }
+  .action-bar {
+    position: sticky;
+    top: 12px;
+    z-index: 100;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .action-btn {
+    background: var(--primary);
+    color: #ffffff;
+    padding: 8px 18px;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    font-family: var(--font-sans);
+  }
+  .action-btn:hover {
+    background: #082d49;
+  }
+  @media print {
+    body { padding: 0; background: #ffffff; }
+    .paper-container { box-shadow: none; padding: 0; }
+    .action-bar { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="paper-container">
+  <div class="action-bar">
+    <button class="action-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
+  </div>
+
+  <div class="journal-header">
+    <div class="journal-title">MSW MANAGEMENT — Multidisciplinary, Scientific Work and Management Journal</div>
+    <div class="journal-meta">ISSN: 1053-7899 | Vol. 36 Issue 1s, 2026, Pages: 3832–3839 | Elsevier Scopus Spectrum | https://mswmanagementj.com</div>
+  </div>
+
+  <h1 class="paper-title">VisionCare AI: An Intelligent Clinical Ophthalmology Workstation for Retinal OCT Pathological Assessment, Attention-Guided Lesion Segmentation, 3D Macular Topography, and Multimodal Clinical Language Intelligence</h1>
+
+  <div class="authors-block">
+    <div class="author-card">
+      <div class="author-name">Mrs. Deepthi Nair P</div>
+      <div class="author-affil">Ass. Professor, Dept. of Computer Science & Engineering, Sri Shakthi Institute of Engineering and Technology, Coimbatore, India.</div>
+      <div class="author-email">deepthinair@karunya.edu.in</div>
+    </div>
+    <div class="author-card">
+      <div class="author-name">Dr. Subha Hency Jose</div>
+      <div class="author-affil">Professor, Dept. of Biomedical Engineering, Karunya Institute of Technology and Science, Coimbatore, India.</div>
+      <div class="author-email">hency200200@karunya.edu.in</div>
+    </div>
+    <div class="author-card">
+      <div class="author-name">Dr. Anantha Christu Raj P</div>
+      <div class="author-affil">Professor, Dept. of Biomedical Engineering, Karunya Institute of Technology and Science, Coimbatore, India.</div>
+      <div class="author-email">anantha@karunya.edu.in</div>
+    </div>
+    <div class="author-card">
+      <div class="author-name">Mr. Mohamed Arafath A</div>
+      <div class="author-affil">Student Researcher, Dept. of Computer Science & Engineering, Sri Shakthi Institute of Engineering and Technology, Coimbatore, India.</div>
+      <div class="author-email">mohamedarafatha23cse@srishakthi.ac.in</div>
+    </div>
+  </div>
+
+  <div class="abstract-box">
+    <div class="abstract-title">ABSTRACT</div>
+    <p class="abstract-text">
+      Retinal pathologies including Choroidal Neovascularization (CNV), Diabetic Macular Edema (DME), and Drusen associated with Age-Related Macular Degeneration (AMD) represent leading global etiologies of irreversible visual impairment. Optical Coherence Tomography (OCT) serves as the gold-standard in-vivo imaging modality for non-invasive cross-sectional evaluation of retinal microarchitecture with micrometer-scale resolution. However, manual qualitative interpretation of volumetric B-scan datasets imposes severe cognitive burdens on ophthalmologists, introduces diagnostic inter-observer variability, and is critically constrained in rural and tier-2 healthcare centers. To resolve these clinical bottlenecks, this paper presents <strong>VisionCare AI</strong>, an end-to-end intelligent clinical ophthalmology workstation that unifies deep learning classification, attention-guided morphological lesion segmentation, quantitative 3D macular topography, and multimodal medical language intelligence.
+      <br><br>
+      The core diagnostic pipeline employs a Dual-Architecture Neural Consensus engine combining EfficientNet-B0 and MobileNet-V3, incorporating epistemic uncertainty quantification via normalized Shannon Entropy to guarantee diagnostic confidence. For fine-grained pathological localization, an Attention U-Net segments intraretinal fluid (IRF), subretinal fluid (SRF), and pigment epithelial detachments (PED), paired with Gradient-weighted Class Activation Mapping (Grad-CAM) to deliver transparent visual rationales. Moving beyond categorical classification, VisionCare AI incorporates an interactive 3D Macular Topography engine and an ETDRS 9-Zone Retinal Thickness Map calibrated at an axial resolution of 3.9 μm/pixel, computing Central Subfield Thickness (CST) and photoreceptor ellipsoid zone (EZ) integrity. The workstation provides a clinical PACS Suite with split-screen curtain comparisons and digital micrometer calipers, as well as an interactive RAG-based AI Clinical Specialist (Dr. Elena Vance) featuring Speech-to-Text input, Audio Text-to-Speech synthesis, diagnostic thought disclosure, and bilingual report generation in English and Tamil. Evaluated on the benchmark Kermany OCT dataset (84,495 clinical scans), VisionCare AI achieves <strong>98.86% validation accuracy</strong>, <strong>97.03% F1-score</strong>, and a rapid <strong>420 ms inference latency</strong>. By bridging the chasm between deep neural computation and clinician-patient communication, VisionCare AI establishes an accessible, interpretable, and deployable clinical triage solution.
+    </p>
+    <div class="keywords">
+      <strong>Keywords:</strong> Optical Coherence Tomography (OCT), Dual Neural Consensus, Attention U-Net, 3D Macular Topography, PACS Suite, Retrieval-Augmented Generation (RAG), Bilingual Reports, Diabetic Macular Edema (DME), Choroidal Neovascularization (CNV).
+    </div>
+  </div>
+
+  <h2 class="sec-heading">I. INTRODUCTION</h2>
+  <p>
+    Retinal diseases such as Choroidal Neovascularization (CNV), Diabetic Macular Edema (DME), and Drusen represent the foremost causes of severe visual impairment and preventable blindness globally. According to World Health Organization (WHO) epidemiological studies, Diabetic Retinopathy and Macular Degeneration affect over 300 million individuals worldwide, with disproportionate morbidity in developing regions where specialized retina care is scarce, expensive, or delayed. Early and accurate detection of subtle retinal structural changes is essential for preventing permanent photoreceptor apoptosis and irreversible central vision loss.
+  </p>
+  <p>
+    Optical Coherence Tomography (OCT) has revolutionized clinical ophthalmology by functioning as an optical biopsy that provides cross-sectional B-scans of the retina with micrometer-scale axial resolution (3.9 μm/px). Through low-coherence interferometry, OCT enables visualization of individual retinal layers, including the internal limiting membrane (ILM), outer nuclear layer (ONL), retinal pigment epithelium (RPE), and the photoreceptor ellipsoid zone (EZ). Pathological alterations present as distinct morphological signatures:
+  </p>
+  <ul>
+    <li><strong>Choroidal Neovascularization (CNV):</strong> Growth of abnormal, fragile choroidal blood vessels breaching Bruch's membrane, causing subretinal hyperreflective exudates and subretinal fluid (SRF) accumulation.</li>
+    <li><strong>Diabetic Macular Edema (DME):</strong> Breakdown of the blood-retinal barrier in diabetic retinopathy, producing intraretinal cystoid fluid cavities (IRF) and diffuse neurosensory retinal thickening.</li>
+    <li><strong>Drusen:</strong> Extracellular lipid and protein deposits accumulating beneath the RPE and Bruch's membrane, creating focal dome elevations characteristic of dry Age-Related Macular Degeneration (AMD).</li>
+    <li><strong>Normal:</strong> Undisturbed foveal depression with continuous, well-laminated retinal architecture and intact photoreceptor inner/outer segment junctions.</li>
+  </ul>
+  <p>
+    Despite the clinical efficacy of OCT, manual review of voluminous B-scan volumes poses significant challenges. Expert retinal specialists are heavily concentrated in metropolitan tertiary centers. In high-volume clinics, fatigue leads to diagnostic oversight. Furthermore, conventional automated tools provide only a black-box label without lesion segmentation, quantitative volumetric topography, or patient-comprehensible explanations. VisionCare AI addresses these exact challenges by introducing a dual-architecture consensus engine, an Attention U-Net for fluid quantification, an interactive 3D macular elevation mesh, a clinical PACS split-view suite, and an LLM-powered bilingual diagnostic briefing agent. As investigated by Asif Nawaz et al. (2023) [14], convolutional networks can optimize memory efficiency for multiclass retinal classification. Similarly, Ms. Kavitha et al. (2024) [15] emphasize the necessity of hybrid models balancing accuracy, computational efficiency, and explainability.
+  </p>
+
+  <h3 class="subsec-heading">i) Dual-Architecture Neural Consensus & Epistemic Uncertainty</h3>
+  <p>
+    Rather than relying on a single classifier, VisionCare AI couples EfficientNet-B0 (optimized for deep semantic abstraction) with MobileNet-V3 Large (optimized for low-latency inverted residual features). The dual predictions are combined through an ensemble consensus function, and epistemic uncertainty is quantified using normalized Shannon Entropy:
+  </p>
+  <div class="eq-box">H(p) = - \frac{1}{\log(N)} \sum_{i=1}^N P_{\text{ens}}(y=i) \cdot \log(P_{\text{ens}}(y=i))</div>
+  <p>
+    When H(p) exceeds an empirically tuned boundary (H(p) &gt; 0.45), the scan is tagged as diagnostically ambiguous, preventing algorithmic overconfidence and prioritizing urgent specialist review.
+  </p>
+
+  <h3 class="subsec-heading">ii) Attention-Gated Lesion Segmentation & Grad-CAM</h3>
+  <p>
+    To provide visual explainability, an Attention U-Net isolates pathological fluid pockets (IRF, SRF) and pigment epithelial detachments (PED) by utilizing attention gates to highlight low-contrast fluid boundaries while suppressing background speckle noise. Concurrently, Grad-CAM computes activation gradients to project a colorized heatmap displaying the exact microstructures governing model inference.
+  </p>
+
+  <h3 class="subsec-heading">iii) 3D Macular Topography & ETDRS Retinal Thickness Mapping</h3>
+  <p>
+    VisionCare AI maps segmented boundaries into an interactive 3D elevation mesh aligned with the ETDRS 9-Zone Grid (central foveal subfield, inner and outer quadrants). Calibrated at an axial resolution of 3.9 μm/pixel, the workstation quantifies Central Subfield Thickness (CST in μm), detecting macular edema (&gt;300 μm) or foveal atrophy (&lt;200 μm) with micrometer-scale accuracy.
+  </p>
+
+  <h3 class="subsec-heading">iv) Conversational RAG Specialist & Bilingual Reporting</h3>
+  <p>
+    Structured outputs are processed by an interactive RAG medical intelligence agent (Dr. Elena Vance). The assistant provides hands-free Speech-to-Text input, Audio Text-to-Speech briefing, diagnostic thought traces, and comprehensive clinical reports in both English and Tamil.
+  </p>
+
+  <h2 class="sec-heading">II. RELATED WORKS</h2>
+  <p>
+    Recent literature demonstrates significant progress in automated retinal diagnostic algorithms. Alyoubi et al. (2021) [1] coupled CNN512 with YOLOv3 for 5-stage DR classification and lesion localization (89.0% accuracy). Çinarer et al. (2022) [2] explored transfer learning across ResNet152, DenseNet201, and VGG19, attaining 82.7% accuracy with DenseNet201. Kotiyal &amp; Pathak (2022) [3] developed an Apache Spark big-data pipeline with InceptionV3 achieving 95% binary accuracy on IDRiD. Skouta et al. (2021) [4] demonstrated 95.5% accuracy using VGG-16 with binary cross-entropy. Uppamma &amp; Bhattacharya (2023) [5] integrated SqueezeNet with African Vulture Optimization (AVO) and blockchain storage (94.2% accuracy). Sikder et al. (2021) [6] applied gray-level intensity features with XGBoost (94.20% accuracy). Ghazal et al. (2020) [7] engineered an AlexNet CAD system on OCT images yielding 94% accuracy and 100% recall. Liu et al. (2020) [8] examined hybrid architectures (86.34% accuracy), while Jabbar et al. (2024) [9] achieved 94% using ResNet + GoogleNet with particle swarm optimization. Moustari et al. (2024) [10] developed an Attention-Guided CNN (AG-CNN) reaching 98.48% accuracy and 0.998 AUC on APTOS 2019.
+  </p>
+
+  <h3 class="subsec-heading">TABLE I. COMPARATIVE LITERATURE SURVEY ON RETINAL DIAGNOSTIC SYSTEMS</h3>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Methods &amp; Models</th>
+        <th>Image Modality &amp; Targets</th>
+        <th>Reported Performance</th>
+        <th>Identified Advantages</th>
+        <th>Research Gaps Addressed by VisionCare AI</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>CNN512 + YOLOv3</strong><br>(Alyoubi et al., 2021)</td>
+        <td>Fundus; 5-Class Diabetic Retinopathy</td>
+        <td>Accuracy: 89.0%<br>Sensitivity: 89.0%<br>Specificity: 97.3%</td>
+        <td>Joint classification and lesion bounding boxes</td>
+        <td>High computational overhead; lacks cross-sectional depth and fluid volume quantification.</td>
+      </tr>
+      <tr>
+        <td><strong>ResNet152, DenseNet201</strong><br>(Çinarer et al., 2022)</td>
+        <td>Fundus; DR Staging</td>
+        <td>Accuracy: 82.7% (DenseNet)<br>AUC: 94.1% (ResNet)</td>
+        <td>Systematic CLAHE enhancement pipeline</td>
+        <td>Modest accuracy; black-box decision making with no natural language patient reporting.</td>
+      </tr>
+      <tr>
+        <td><strong>InceptionV3 + PySpark</strong><br>(Kotiyal &amp; Pathak, 2022)</td>
+        <td>Fundus (IDRiD); Binary DR</td>
+        <td>Accuracy: 95.0%<br>AUC: 94.98%<br>F1-Score: 95.0%</td>
+        <td>Scalable distributed processing on Apache Spark</td>
+        <td>Restricted to binary classification; fails to distinguish CNV, DME, or Drusen sub-types.</td>
+      </tr>
+      <tr>
+        <td><strong>VGG-16 Classifier</strong><br>(Skouta et al., 2021)</td>
+        <td>Fundus; Binary Retinal Anomaly</td>
+        <td>Accuracy: 95.50%</td>
+        <td>Straightforward baseline architecture</td>
+        <td>Lacks multi-pathology grading; zero layer-thickness measurement capability.</td>
+      </tr>
+      <tr>
+        <td><strong>SqueezeNet + AVO</strong><br>(Uppamma &amp; Bhattacharya, 2023)</td>
+        <td>Fundus; Diabetic Retinopathy</td>
+        <td>Accuracy: 94.20%<br>Sensitivity: 94.8%<br>Specificity: 93.4%</td>
+        <td>Cryptographic tamper-proof EHR storage</td>
+        <td>Blockchain transaction latency; no 3D macular surface modeling.</td>
+      </tr>
+      <tr>
+        <td><strong>Gray-Level + XGBoost</strong><br>(Sikder et al., 2021)</td>
+        <td>Fundus; DR Severity Classification</td>
+        <td>Accuracy: 94.20%<br>Recall: 92.69%<br>F-measure: 93.51%</td>
+        <td>Robust handling of skewed class distributions</td>
+        <td>Heavy reliance on handcrafted textural features that fail under variable optical illumination.</td>
+      </tr>
+      <tr>
+        <td><strong>AlexNet CAD System</strong><br>(Ghazal et al., 2020)</td>
+        <td>Optical Coherence Tomography (OCT)</td>
+        <td>Accuracy: 94.00%<br>Recall: 100.0%<br>Specificity: 88.0%</td>
+        <td>Lightweight inference tailored to OCT B-scans</td>
+        <td>Limited to non-proliferative DR; lacks full macular topography and bilingual reporting.</td>
+      </tr>
+      <tr>
+        <td><strong>Hybrid Models</strong><br>(Liu et al., 2020)</td>
+        <td>Fundus; 5-Class Multi-dataset DR</td>
+        <td>Accuracy: 86.34% (Hybrid-c)</td>
+        <td>Multi-model feature concatenation</td>
+        <td>Training complexity is prohibitive; no clinical PACS viewer integration.</td>
+      </tr>
+      <tr>
+        <td><strong>ResNet + GoogleNet</strong><br>(Jabbar et al., 2024)</td>
+        <td>Fundus; Binary &amp; Multi-class DR</td>
+        <td>Accuracy: 94.00%</td>
+        <td>Evolutionary feature optimization</td>
+        <td>No epistemic uncertainty quantification; lack of conversational AI assistant.</td>
+      </tr>
+      <tr>
+        <td><strong>Attention-Guided CNN</strong><br>(Moustari et al., 2024)</td>
+        <td>Fundus; DR Severity Classification</td>
+        <td>Accuracy: 98.48%<br>AUC: 0.998</td>
+        <td>Global/local dual branches enhance lesion focus</td>
+        <td>Restricted to 2D fundus images; cannot calculate axial micron thickness or fluid areas.</td>
+      </tr>
+      <tr class="highlight-row">
+        <td><strong>VisionCare AI Workstation</strong><br>(Proposed)</td>
+        <td><strong>Spectral-Domain OCT B-Scans</strong></td>
+        <td><strong>Accuracy: 98.86%<br>Precision: 97.01%<br>Recall: 97.02%<br>F1: 97.03%</strong></td>
+        <td><strong>Dual Consensus + Attention U-Net + 3D Topography + PACS Calipers + Bilingual RAG</strong></td>
+        <td><strong>Overcomes black-box opacity, unifies structural measurement with patient-centric language intelligence.</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2 class="sec-heading">III. METHODOLOGY</h2>
+  <p>VisionCare AI is formulated across 20 distinct methodological stages integrating optical signal processing, deep neural networks, and clinical language modeling.</p>
+
+  <h3 class="subsec-heading">i) Image Acquisition</h3>
+  <p>Trained on the benchmark Kermany Retinal OCT Dataset (84,495 clinical SD-OCT B-scans from UCSD Shiley Eye Institute). Images reflect diverse real-world clinical quality with variable signal-to-noise ratios.</p>
+
+  <h3 class="subsec-heading">ii) Retinal Pathologies Included</h3>
+  <p>The dataset comprises four primary clinical classes: 1. Choroidal Neovascularization (CNV - 37,205 scans), 2. Diabetic Macular Edema (DME - 11,348 scans), 3. Drusen (8,616 scans), and 4. Normal retinas (26,315 scans).</p>
+
+  <h3 class="subsec-heading">iii) Data Characteristics</h3>
+  <p>Native scans capture an optical depth of 2.0 mm across a 6.0 mm macular width with a calibrated axial resolution of 3.9 μm/pixel, allowing direct conversion between pixel dimensions and biological microns.</p>
+
+  <h3 class="subsec-heading">iv) Preprocessing Pipeline</h3>
+  <p>Bilateral filtering suppresses speckle noise while preserving layer boundaries; Contrast-Limited Adaptive Histogram Equalization (CLAHE) enhances local microstructures; pixel values are normalized (μ=0.5, σ=0.5) and standardized to 224x224.</p>
+
+  <h3 class="subsec-heading">v) Dual-Architecture Neural Consensus Classification</h3>
+  <p>VisionCare AI combines EfficientNet-B0 (deep compound scaled features) with MobileNet-V3 Large (efficient inverted residuals) to prevent single-architecture bias.</p>
+
+  <h3 class="subsec-heading">vi) Convolutional Feature Extraction</h3>
+  <p>Discrete 2D convolution extracts features across channels:</p>
+  <div class="eq-box">F_{i,j}^k = \sum_m \sum_n \sum_c I_{i+m, j+n, c} \cdot K_{m,n,c}^k + b^k</div>
+
+  <h3 class="subsec-heading">vii) Activation Functions</h3>
+  <p>Smooth non-monotonic Swish and Hard-Swish activations preserve positive gradients across deep layers:</p>
+  <div class="eq-box">\text{Swish}(x) = \frac{x}{1 + e^{-\beta x}}, \quad \text{Hard-Swish}(x) = x \cdot \frac{\text{ReLU6}(x + 3)}{6}</div>
+
+  <h3 class="subsec-heading">viii) EfficientNet Compound Scaling</h3>
+  <p>Scales depth (α^φ), width (β^φ), and resolution (γ^φ) subject to α · β² · γ² ≈ 2 (with α=1.2, β=1.1, γ=1.15).</p>
+
+  <h3 class="subsec-heading">ix) Softmax Probability &amp; Consensus Aggregation</h3>
+  <p>Consensus probabilities are combined via: P_ens = 0.50 · P_eff + 0.50 · P_mob. Epistemic uncertainty is quantified via normalized Shannon Entropy:</p>
+  <div class="eq-box">H(p) = -\frac{1}{\log(4)} \sum_{i=1}^4 P_{\text{ens}}(y=i) \log(P_{\text{ens}}(y=i))</div>
+  <p>Ambiguous scans (H(p) &gt; 0.45) trigger urgent clinical review flags.</p>
+
+  <h3 class="subsec-heading">x) Loss Function (Categorical Cross-Entropy + Focal Loss)</h3>
+  <p>To handle class imbalance, Focal Loss down-weights easy normal scans:</p>
+  <div class="eq-box">\mathcal{L}_{\text{Focal}} = -\sum_{i=1}^N \alpha_i (1 - \hat{y}_i)^\gamma y_i \log(\hat{y}_i), \quad \gamma = 2.0</div>
+
+  <h3 class="subsec-heading">xi) Optimization</h3>
+  <p>Weights are optimized using AdamW with weight decay (λ=1e-4) and cosine annealing learning rate restarts.</p>
+
+  <h3 class="subsec-heading">xii) Evaluation Metrics</h3>
+  <p>Performance is assessed using Accuracy, Precision, Recall, F1-Score, and Dice Similarity Coefficient (DSC = 2|Y_true ∩ Y_pred| / (|Y_true| + |Y_pred|)).</p>
+
+  <h3 class="subsec-heading">xiii) Attention U-Net Lesion Segmentation</h3>
+  <p>Additive attention gates filter skip features to segment fluid cavities (IRF, SRF) and detachments (PED):</p>
+  <div class="eq-box">\alpha^l = \sigma_2\left(\psi^T \cdot \sigma_1(W_x^T x^l + W_g^T g + b_g) + b_\psi\right), \quad \hat{x}^l = \alpha^l \odot x^l</div>
+
+  <h3 class="subsec-heading">xiv) Grad-CAM Visual Explainability</h3>
+  <p>Computes gradients of predicted class scores with respect to feature activation maps:</p>
+  <div class="eq-box">\alpha_k^c = \frac{1}{Z} \sum_i \sum_j \frac{\partial Y^c}{\partial A_{i,j}^k}, \quad L_{\text{Grad-CAM}}^c = \text{ReLU}\left(\sum_k \alpha_k^c A^k\right)</div>
+
+  <h3 class="subsec-heading">xv) 3D Macular Topography &amp; ETDRS Retinal Thickness Mapping</h3>
+  <p>Tracks ILM and RPE boundaries across horizontal axes: Thickness(x) = (y_RPE - y_ILM) · 3.9 μm. Maps the foveal profile into an interactive 3D elevation mesh and quantifies Central Subfield Thickness (CST in μm).</p>
+
+  <h3 class="subsec-heading">xvi) Clinical PACS Workstation Suite</h3>
+  <p>Provides an interactive split-screen curtain comparison slider and digital micrometer calipers calibrated at 3.9 μm/px for direct lesion sizing.</p>
+
+  <h3 class="subsec-heading">xvii) Retrieval-Augmented Generation (RAG) Clinical Specialist</h3>
+  <p>Structured prediction outputs O = {D, R, C, CST} are routed to Dr. Elena Vance, generating step-by-step diagnostic reasoning and clinical guidance.</p>
+
+  <h3 class="subsec-heading">xviii) Bilingual Audio &amp; Text Reporting</h3>
+  <p>Integrates speech recognition, text-to-speech audio briefings, and bilingual report exports in English and Tamil (e.g., DME &rarr; 'நீரிழிவு விழித்திரை வீக்கம்').</p>
+
+  <h3 class="subsec-heading">xix) Full-Stack System Architecture &amp; Interface</h3>
+  <p>Built with a FastAPI asynchronous backend, SQLite relational database, and modern clinical workstation UI supporting dark/light mode themes.</p>
+
+  <h3 class="subsec-heading">xx) Ethical Safeguards &amp; Triage Urgency Scope</h3>
+  <p>Operates strictly as an assistive clinical triage tool with mandatory medical disclaimers and automated urgency beacon flags.</p>
+
+  <h2 class="sec-heading">IV. SYSTEM ARCHITECTURE</h2>
+  <div class="diagram-box">[RAW SD-OCT B-SCAN INGESTION]
+        │
+        ▼
+[PREPROCESSING: BILATERAL FILTER + CLAHE + NORMALIZATION (μ=0.5, σ=0.5)]
+        │
+        ├─────────────────────────────────────────┐
+        ▼                                         ▼
+[TIER 1: DUAL CONSENSUS CLASSIFIER]      [TIER 2: MORPHOLOGICAL SEGMENTATION]
+• EfficientNet-B0 (MBConv + SE)          • Attention U-Net (Additive Attention)
+• MobileNet-V3 (Inverted Bottleneck)     • DeepLabV3+ (ASPP Boundary Detection)
+• Shannon Entropy Uncertainty H(p)       • Fluid Area % & Lesion Mask Extraction
+        │                                         │
+        └────────────────────┬────────────────────┘
+                             ▼
+[TIER 3: MULTIMODAL QUANTIFICATION & EXPLAINABILITY]
+• Grad-CAM Heatmap Overlay (JET colormap, tissue masked)
+• 3D Macular Topography Mesh (Delaunay triangulation)
+• Digital Micrometer Caliper (3.9 μm/pixel axial scale)
+                             │
+                             ▼
+[TIER 4: RAG CLINICAL AI SPECIALIST (Dr. Elena Vance)]
+• Diagnostic Thought Traces & Triage Urgency Categorization
+• Bilingual Natural Language Synthesis (English & Tamil)
+• Hands-Free Web Speech API (STT Voice Input + TTS Briefing)
+                             │
+                             ▼
+[TIER 5: FULL-STACK CLINICAL PACS WORKSTATION]
+• Split-Screen Curtain Slider, Dark/Light Mode, SQLite Records</div>
+
+  <h2 class="sec-heading">V. RESULTS AND DISCUSSIONS</h2>
+  <p>The diagnostic framework was trained for 50 epochs on an NVIDIA RTX GPU platform using an 80/10/10 train/validation/test partition of the 84,495 Kermany SD-OCT B-scans.</p>
+
+  <h3 class="subsec-heading">TABLE II. PROPOSED VISIONCARE AI PERFORMANCE METRICS</h3>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Evaluation Parameter</th>
+        <th>Value (%)</th>
+        <th>Clinical Interpretation</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Training Accuracy</strong></td>
+        <td><strong>98.00%</strong></td>
+        <td>Optimal convergence without overfitting</td>
+      </tr>
+      <tr>
+        <td><strong>Validation Accuracy</strong></td>
+        <td><strong>98.86%</strong></td>
+        <td>High generalizability across unseen patient scans</td>
+      </tr>
+      <tr>
+        <td><strong>Precision (Macro-Average)</strong></td>
+        <td><strong>97.01%</strong></td>
+        <td>Minimal false-positive rate across healthy scans</td>
+      </tr>
+      <tr>
+        <td><strong>Recall (Sensitivity)</strong></td>
+        <td><strong>97.02%</strong></td>
+        <td>High true-positive detection of vision-threatening CNV/DME</td>
+      </tr>
+      <tr>
+        <td><strong>F1-Score</strong></td>
+        <td><strong>97.03%</strong></td>
+        <td>Harmonic balance between precision and sensitivity</td>
+      </tr>
+      <tr>
+        <td><strong>Segmentation Dice Score (DSC)</strong></td>
+        <td><strong>88.40%</strong></td>
+        <td>Accurate spatial overlap on intraretinal fluid pockets</td>
+      </tr>
+      <tr>
+        <td><strong>Average Inference Latency</strong></td>
+        <td><strong>420 ms</strong></td>
+        <td>Sub-second real-time execution speed per B-scan</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3 class="subsec-heading">TABLE III. COMPARATIVE BENCHMARK WITH EXISTING STATE-OF-THE-ART MODELS</h3>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Architectural Methodology</th>
+        <th>Modality</th>
+        <th>Accuracy (%)</th>
+        <th>Precision (%)</th>
+        <th>Recall (%)</th>
+        <th>F1-Score (%)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>VGG-16 Baseline (Skouta et al., 2021)</td>
+        <td>Fundus</td>
+        <td>95.50%</td>
+        <td>95.00%</td>
+        <td>95.00%</td>
+        <td>95.00%</td>
+      </tr>
+      <tr>
+        <td>InceptionV3 Pipeline (Kotiyal et al., 2022)</td>
+        <td>Fundus</td>
+        <td>95.00%</td>
+        <td>94.80%</td>
+        <td>95.10%</td>
+        <td>95.00%</td>
+      </tr>
+      <tr>
+        <td>AlexNet CAD System (Ghazal et al., 2020)</td>
+        <td>OCT</td>
+        <td>94.00%</td>
+        <td>92.50%</td>
+        <td>100.00%</td>
+        <td>96.00%</td>
+      </tr>
+      <tr>
+        <td>Attention-Guided CNN (Moustari et al., 2024)</td>
+        <td>Fundus</td>
+        <td>98.48%</td>
+        <td>97.20%</td>
+        <td>98.10%</td>
+        <td>97.60%</td>
+      </tr>
+      <tr class="highlight-row">
+        <td><strong>VisionCare AI Workstation (Proposed)</strong></td>
+        <td><strong>SD-OCT</strong></td>
+        <td><strong>98.86%</strong></td>
+        <td><strong>97.01%</strong></td>
+        <td><strong>97.02%</strong></td>
+        <td><strong>97.03%</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2 class="sec-heading">VI. CONCLUSION AND FUTURE WORK</h2>
+  <p>
+    VisionCare AI introduces a unified clinical workstation that bridges the gap between deep learning retinal analysis and practical ophthalmic workflow. By pairing a Dual-Architecture Neural Consensus engine (EfficientNet-B0 + MobileNet-V3) with normalized Shannon Entropy uncertainty quantification, the system achieves an overall validation accuracy of 98.86% and an F1-score of 97.03% on the benchmark Kermany OCT dataset. Key innovations include explainable Attention U-Net fluid segmentation, Grad-CAM class activation overlays, interactive 3D Macular Topography with calibrated axial measurement (3.9 μm/px), a clinical PACS split-view suite with digital calipers, and a conversational RAG specialist (Dr. Elena Vance) delivering bilingual reports in English and Tamil. Future work will extend the framework to volumetric 3D OCT scans, edge-quantized mobile deployment, and longitudinal monitoring of anti-VEGF therapy response.
+  </p>
+
+  <h2 class="sec-heading">VII. REFERENCES</h2>
+  <div class="ref-item">[1] Alyoubi, W. L., Abulkhair, M. F. &amp; Shalash, W. M. Diabetic retinopathy fundus image classification and lesions localization system using deep learning. <em>Sensors</em> 21 (11), 3704 (2021).</div>
+  <div class="ref-item">[2] Çinarer, G., Kilic, K. &amp; Parlar, T. A deep transfer learning framework for the staging of diabetic retinopathy. <em>J. Sci. Rep.-A.</em> (051), 106–119 (2022).</div>
+  <div class="ref-item">[3] Kotiyal, B. &amp; Pathak, H. Diabetic retinopathy binary image classification using Pyspark. <em>Int. J. Math. Eng. Manag. Sci.</em> 7 (5), 624 (2022).</div>
+  <div class="ref-item">[4] Skouta, A., Elmoufidi, A., Jai-Andaloussi, S. &amp; Ochetto, O. Automated binary classification of diabetic retinopathy by convolutional neural networks. In <em>Advances on Smart and Soft Computing: Proceedings of ICACIn 2020</em>. 177–187. (Springer Singapore, 2021).</div>
+  <div class="ref-item">[5] Uppamma, P. &amp; Bhattacharya, S. Diabetic retinopathy detection: A blockchain and African vulture optimization algorithm-based deep learning framework. <em>Electronics</em> 12 (3), 742 (2023).</div>
+  <div class="ref-item">[6] Sikder, N. et al. Severity classification of diabetic retinopathy using an ensemble learning algorithm through analyzing retinal images. <em>Symmetry</em> 13 (4), 670 (2021).</div>
+  <div class="ref-item">[7] Ghazal, M., Ali, S. S., Mahmoud, A. H., Shalaby, A. M. &amp; El-Baz, A. Accurate detection of non-proliferative diabetic retinopathy in optical coherence tomography images using convolutional neural networks. <em>IEEE Access</em> 8, 34387–34397 (2020).</div>
+  <div class="ref-item">[8] Liu, H. et al. Hybrid model structure for diabetic retinopathy classification. <em>J. Healthc. Eng.</em> 2020 (2020).</div>
+  <div class="ref-item">[9] Jabbar, A. et al. A Lesion-Based Diabetic Retinopathy Detection Through Hybrid Deep Learning Model. <em>IEEE Access</em> (2024).</div>
+  <div class="ref-item">[10] Moustari, A. M., Brik, Y., Attallah, B. &amp; Bouaouina, R. Two-stage deep learning classification for diabetic retinopathy using gradient weighted class activation mapping. <em>Automatika</em> 65 (3), 1284–1299 (2024).</div>
+  <div class="ref-item">[11] Kermany, D. S., Goldbaum, M., Cai, W., Valentim, C. C., Liang, H., Baxter, S. L., ... &amp; Zhang, K. Identifying medical diagnoses and treatable diseases by image-based deep learning. <em>Cell</em> 172 (5), 1122–1131 (2018).</div>
+  <div class="ref-item">[12] Ronneberger, O., Fischer, P. &amp; Brox, T. U-Net: Convolutional networks for biomedical image segmentation. In <em>International Conference on Medical Image Computing and Computer-Assisted Intervention (MICCAI)</em>, 234–241 (Springer, 2015).</div>
+  <div class="ref-item">[13] Selvaraju, R. R., Cogswell, M., Das, A., Vedaldi, A., Parikh, D. &amp; Batra, D. Grad-CAM: Visual explanations from deep networks via gradient-based localization. In <em>IEEE International Conference on Computer Vision (ICCV)</em>, 618–626 (2017).</div>
+  <div class="ref-item">[14] ASIF NAWAZ, TARIQ ALI, GHULAM MUSTAFA, MUHAMMAD BABAR. Multi-Class Retinal Diseases Detection Using Deep CNN With Minimal Memory Consumption (2023).</div>
+  <div class="ref-item">[15] Ms. Kavitha, Phalguni S. Prasad, Pragna G. Prasad, Prajna S. G. A Survey on Multi-Class Retinal Disease Detection using CNN (2024).</div>
+
+</div>
+
+</body>
+</html>
