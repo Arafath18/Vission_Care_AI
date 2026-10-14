@@ -1,0 +1,12 @@
+{
+  "status": "complete",
+  "message": "All VisionCare models are ready.",
+  "models": {
+    "efficientnet": true,
+    "mobilenet": true,
+    "segmentation": true
+  },
+  "efficientnet_val_acc": 95.01466275659824,
+  "mobilenet_val_acc": 87.68328445747801,
+  "completed_at": "2026-06-06T05:42:28.134497+00:00"
+}

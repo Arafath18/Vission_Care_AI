@@ -1,0 +1,2907 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VisionCare - AI-Powered Retinal OCT Analysis System</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+<style>
+  :root {
+    --transition: 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+
+  [data-theme="light"] {
+    --bg-base: #f8fafc;
+    --bg-surface: #ffffff;
+    --bg-card: #ffffff;
+    --bg-elevated: #f1f5f9;
+    --bg-hover: #e2e8f0;
+    --border: #e2e8f0;
+    --border-strong: #cbd5e1;
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+    --accent: #0284c7;
+    --accent-light: #0369a1;
+    --accent-gradient: linear-gradient(135deg, #0284c7 0%, #0d9488 100%);
+    --accent-glow: rgba(2, 132, 199, 0.15);
+    --success: #059669;
+    --warning: #d97706;
+    --danger: #dc2626;
+    --sidebar-bg: #ffffff;
+    --sidebar-active: rgba(2, 132, 199, 0.12);
+    --header-bg: rgba(255, 255, 255, 0.9);
+    --shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06);
+    --shadow-lg: 0 10px 30px -4px rgba(15, 23, 42, 0.08);
+    --chart-1: #0284c7;
+    --chart-2: #059669;
+    --chart-3: #d97706;
+    --chart-4: #dc2626;
+    --chart-5: #0d9488;
+    --input-bg: #ffffff;
+    --scrollbar: #cbd5e1;
+  }
+
+  [data-theme="dark"] {
+    --bg-base: #030712;
+    --bg-surface: rgba(15, 23, 42, 0.6);
+    --bg-card: rgba(30, 41, 59, 0.45);
+    --bg-elevated: rgba(51, 65, 85, 0.4);
+    --bg-hover: rgba(71, 85, 105, 0.45);
+    --border: rgba(99, 102, 241, 0.15);
+    --border-strong: rgba(99, 102, 241, 0.3);
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-muted: #64748b;
+    --accent: #6366f1;
+    --accent-light: #818cf8;
+    --accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    --accent-glow: rgba(99, 102, 241, 0.2);
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --sidebar-bg: rgba(15, 23, 42, 0.95);
+    --sidebar-active: rgba(99, 102, 241, 0.18);
+    --header-bg: rgba(3, 7, 18, 0.7);
+    --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    --shadow-lg: 0 16px 48px 0 rgba(0, 0, 0, 0.55);
+    --chart-1: #6366f1;
+    --chart-2: #10b981;
+    --chart-3: #f59e0b;
+    --chart-4: #ef4444;
+    --chart-5: #a855f7;
+    --input-bg: rgba(15, 23, 42, 0.7);
+    --scrollbar: #1e293b;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  html, body {
+    height: 100%;
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-base);
+    color: var(--text-primary);
+    overflow: hidden;
+    transition: background 0.5s ease;
+  }
+
+  [data-theme="dark"] body {
+    background: radial-gradient(ellipse at top, #0f172a, #030712);
+  }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 4px; }
+
+  .app { display: flex; height: 100vh; overflow: hidden; }
+
+  .page { display: none; width: 100%; height: 100%; }
+  .page.active { display: flex; }
+  .page.auth-page { align-items: center; justify-content: center; background: var(--bg-base); position: relative; overflow: hidden; }
+
+  [data-theme="dark"] .page.auth-page {
+    background: radial-gradient(circle at center, #0c152b 0%, #030712 100%);
+  }
+
+  .auth-bg {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 20% 40%, rgba(99,102,241,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 80% at 80% 60%, rgba(139,92,246,0.06) 0%, transparent 60%);
+  }
+  .auth-bg-grid {
+    position: absolute; inset: 0;
+    background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 50px 50px;
+    opacity: 0.2;
+    mask-image: radial-gradient(circle, black 30%, transparent 70%);
+    -webkit-mask-image: radial-gradient(circle, black 30%, transparent 70%);
+  }
+
+  .retinal-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    animation: pulse-orb 8s ease-in-out infinite alternate;
+  }
+  .retinal-orb.orb-1 { width: 350px; height: 350px; left: -100px; top: 15%; background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%); animation-delay: 0s; }
+  .retinal-orb.orb-2 { width: 300px; height: 300px; right: -80px; bottom: 15%; background: radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 70%); animation-delay: 2.5s; }
+  .retinal-orb.orb-3 { width: 220px; height: 220px; right: 25%; top: 10%; background: radial-gradient(circle, rgba(168,85,247,0.1) 0%, transparent 70%); animation-delay: 4.5s; }
+  @keyframes pulse-orb { 0% { transform: scale(1) translate(0, 0); opacity: 0.5; } 100% { transform: scale(1.15) translate(15px, -15px); opacity: 0.8; } }
+
+  .auth-split-wrapper {
+    position: relative; z-index: 10;
+    display: grid; grid-template-columns: 1.15fr 1fr;
+    max-width: 960px; width: 92%; min-height: 600px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-strong);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: var(--shadow-lg), 0 20px 50px -10px rgba(2, 132, 199, 0.12);
+    animation: card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .auth-showcase-pane {
+    position: relative;
+    background: url('/images/retinal_scan_hero.jpg') center/cover no-repeat;
+    display: flex; flex-direction: column; justify-content: space-between;
+    padding: 36px; color: #ffffff; overflow: hidden;
+  }
+  .auth-showcase-pane::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(3, 7, 18, 0.5) 0%, rgba(3, 7, 18, 0.88) 100%);
+    backdrop-filter: blur(2px); z-index: 1;
+  }
+  .auth-showcase-content { position: relative; z-index: 2; }
+  .auth-showcase-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 14px;
+    background: rgba(2, 132, 199, 0.25);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    border-radius: 999px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+    color: #38bdf8; text-transform: uppercase;
+    backdrop-filter: blur(8px);
+  }
+  .auth-showcase-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 26px; font-weight: 800; line-height: 1.25;
+    margin-top: 18px; color: #ffffff; letter-spacing: -0.5px;
+  }
+  .auth-showcase-desc {
+    font-size: 13px; line-height: 1.6; color: #cbd5e1;
+    margin-top: 10px; max-width: 380px;
+  }
+  .auth-features-list {
+    display: flex; flex-direction: column; gap: 12px; margin-top: 24px;
+  }
+  .auth-feature-item {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 12px; font-weight: 600; color: #f1f5f9;
+  }
+  .auth-feature-icon {
+    width: 24px; height: 24px; border-radius: 6px;
+    background: rgba(2, 132, 199, 0.3);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; color: #38bdf8;
+  }
+
+  .auth-form-pane {
+    padding: 40px; display: flex; flex-direction: column;
+    justify-content: center; background: var(--bg-card);
+  }
+
+  @media (max-width: 860px) {
+    .auth-split-wrapper { grid-template-columns: 1fr; max-width: 480px; }
+    .auth-showcase-pane { display: none; }
+  }
+
+  /* Diagnostic Hero Banner on Dashboard */
+  .hero-diagnostic-banner {
+    position: relative; border-radius: 18px; overflow: hidden;
+    margin-bottom: 24px; border: 1px solid var(--border-strong);
+    background: url('/images/oct_suite.jpg') center/cover no-repeat;
+    box-shadow: var(--shadow-lg);
+  }
+  .hero-diagnostic-banner::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(90deg, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.85) 55%, rgba(15, 23, 42, 0.7) 100%);
+    backdrop-filter: blur(2px);
+  }
+  .hero-banner-content {
+    position: relative; z-index: 2; padding: 28px 32px;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 20px; color: #ffffff;
+  }
+  .hero-banner-left { max-width: 600px; }
+  .hero-badge-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 12px;
+    background: rgba(2, 132, 199, 0.25);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    border-radius: 999px;
+    font-size: 10.5px; font-weight: 700; color: #38bdf8;
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;
+  }
+  .hero-banner-title {
+    font-family: 'Outfit', sans-serif; font-size: 24px;
+    font-weight: 800; letter-spacing: -0.5px; line-height: 1.25; color: #ffffff;
+  }
+  .hero-banner-desc {
+    font-size: 13px; color: #cbd5e1; margin-top: 8px; line-height: 1.5;
+  }
+  .hero-banner-tags {
+    display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px;
+  }
+  .hero-tag {
+    font-size: 11px; font-weight: 600; color: #94a3b8;
+    background: rgba(255, 255, 255, 0.08); padding: 4px 10px;
+    border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Interactive Case Gallery Cards */
+  .sample-case-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden; transition: all var(--transition);
+    cursor: pointer; display: flex; flex-direction: column;
+    box-shadow: var(--shadow);
+  }
+  .sample-case-card:hover {
+    transform: translateY(-4px); border-color: var(--accent);
+    box-shadow: var(--shadow-lg), 0 8px 24px rgba(2, 132, 199, 0.15);
+  }
+  .sample-case-thumb {
+    width: 100%; height: 110px; position: relative;
+    overflow: hidden; background: #030712;
+  }
+  .sample-case-thumb img {
+    width: 100%; height: 100%; object-fit: cover;
+    transition: transform 0.4s ease;
+  }
+  .sample-case-card:hover .sample-case-thumb img { transform: scale(1.06); }
+  .sample-case-badge {
+    position: absolute; top: 8px; right: 8px;
+    padding: 3px 8px; border-radius: 6px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .sample-case-body {
+    padding: 14px; flex: 1; display: flex;
+    flex-direction: column; justify-content: space-between;
+  }
+  .sample-case-title {
+    font-family: 'Outfit', sans-serif; font-size: 14px;
+    font-weight: 700; color: var(--text-primary);
+  }
+  .sample-case-desc {
+    font-size: 11px; color: var(--text-muted);
+    margin-top: 4px; line-height: 1.4;
+  }
+  .sample-case-btn {
+    margin-top: 10px; width: 100%; font-size: 11px;
+    padding: 6px 10px; border-radius: 8px;
+  }
+
+  /* Executive Dashboard Header Bar */
+  .dash-command-header {
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 18px 24px; margin-bottom: 20px;
+    box-shadow: var(--shadow); flex-wrap: wrap; gap: 16px;
+  }
+  .dash-greeting-wrap { display: flex; align-items: center; gap: 14px; }
+  .dash-user-badge {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: var(--accent-gradient); display: flex;
+    align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 800; color: #fff;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3);
+  }
+  .dash-greeting-title {
+    font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 800;
+    color: var(--text-primary); display: flex; align-items: center; gap: 8px;
+  }
+  .dash-greeting-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+  .dash-action-cluster { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+  /* 8fr / 4fr Split Grid */
+  .dash-split-grid {
+    display: grid; grid-template-columns: 8fr 4fr; gap: 20px;
+    margin-bottom: 24px; align-items: stretch;
+  }
+  .dash-split-grid .hero-diagnostic-banner {
+    margin-bottom: 0; height: 100%; display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .dash-split-grid .hero-banner-content {
+    height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding: 24px 26px; gap: 16px;
+  }
+  @media (max-width: 1080px) {
+    .dash-split-grid { grid-template-columns: 1fr; }
+  }
+
+  /* Interactive Case Strip on Hub */
+  .case-strip-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+    margin-top: 18px;
+  }
+  .case-strip-pill {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 12px; padding: 9px;
+    display: flex; align-items: center; gap: 10px;
+    cursor: pointer; transition: all var(--transition);
+    backdrop-filter: blur(8px);
+  }
+  .case-strip-pill:hover {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: #38bdf8; transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(2, 132, 199, 0.25);
+  }
+  .case-strip-thumb {
+    width: 42px; height: 42px; border-radius: 8px;
+    overflow: hidden; flex-shrink: 0; background: #000;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+  }
+  .case-strip-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .case-strip-info { flex: 1; min-width: 0; }
+  .case-strip-title { font-size: 12px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .case-strip-tag { font-size: 10px; font-weight: 600; }
+
+  /* AI Model Health Card */
+  .neural-health-card {
+    background: var(--bg-card); border: 1px solid var(--border-strong);
+    border-radius: 18px; padding: 22px; display: flex; flex-direction: column;
+    justify-content: space-between; box-shadow: var(--shadow); position: relative;
+    overflow: hidden;
+  }
+  .neural-health-card::before {
+    content: ''; position: absolute; top: -50px; right: -50px;
+    width: 140px; height: 140px; border-radius: 50%;
+    background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .neural-health-header {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
+  }
+  .neural-specs-list {
+    display: flex; flex-direction: column; gap: 8px; margin: 12px 0;
+  }
+  .neural-spec-row {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 12px; padding: 7px 10px; background: var(--bg-elevated);
+    border-radius: 8px; border: 1px solid var(--border);
+  }
+  .neural-spec-key { color: var(--text-muted); font-weight: 500; }
+  .neural-spec-val { font-weight: 700; color: var(--text-primary); font-family: 'DM Mono', monospace; }
+
+  /* Revamped Metric Deck */
+  .stat-card-top {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
+  }
+  .stat-card-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid var(--border);
+  }
+  .stat-card-trend {
+    font-size: 9.5px; font-weight: 700; padding: 2px 6px; border-radius: 4px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+
+  .auth-card {
+    position: relative; z-index: 2;
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border-strong);
+    border-radius: 20px;
+    padding: 44px;
+    width: 440px;
+    box-shadow: var(--shadow-lg), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+    animation: card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes card-in { from { opacity:0; transform: translateY(24px) scale(0.97); } to { opacity:1; transform: translateY(0) scale(1); } }
+
+  .auth-brand { text-align: center; margin-bottom: 32px; }
+  .brand-icon {
+    width: 60px; height: 60px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
+    border: 1px solid var(--border-strong);
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px;
+    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.15);
+    transition: transform var(--transition);
+  }
+  .brand-icon:hover { transform: scale(1.05) rotate(5deg); }
+  .brand-icon svg { width: 30px; height: 30px; stroke: var(--accent-light); fill: none; stroke-width: 1.8; filter: drop-shadow(0 0 6px var(--accent-light)); }
+  .brand-name { font-family: 'Outfit', sans-serif; font-size: 25px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.5px; }
+  .brand-tagline { font-size: 11px; color: var(--text-muted); letter-spacing: 0.8px; margin-top: 4px; text-transform: uppercase; font-weight: 600; }
+
+  .auth-title { font-family: 'Outfit', sans-serif; font-size: 22px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+  .auth-subtitle { font-size: 13.5px; color: var(--text-secondary); margin-bottom: 24px; }
+
+  .form-group { margin-bottom: 20px; }
+  .form-label { font-size: 11px; font-weight: 700; color: var(--text-secondary); margin-bottom: 8px; display: block; letter-spacing: 0.5px; text-transform: uppercase; }
+  .form-input {
+    width: 100%; padding: 12px 16px;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text-primary) !important;
+    font-family: 'Inter', sans-serif;
+    font-size: 13.5px;
+    outline: none;
+    transition: border-color var(--transition), box-shadow var(--transition);
+  }
+  .form-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow), 0 0 8px rgba(99,102,241,0.25); }
+  .form-input::placeholder { color: var(--text-muted) !important; }
+
+  .input-row { position: relative; }
+  .input-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); display: flex; align-items: center; justify-content: center; }
+  .input-icon svg { width: 16px; height: 16px; stroke: var(--text-secondary); fill: none; stroke-width: 1.8; }
+  .input-row .form-input { padding-left: 42px; }
+
+  .form-row { display: flex; gap: 14px; }
+  .form-row .form-group { flex: 1; }
+
+  .forgot-link { float: right; font-size: 12.5px; color: var(--accent-light); text-decoration: none; font-weight: 500; }
+  .forgot-link:hover { text-decoration: underline; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 8px; padding: 12px 24px;
+    border-radius: 10px; border: none;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    letter-spacing: 0.2px;
+  }
+  .btn-primary { 
+    background: var(--accent-gradient); 
+    color: #fff; 
+    width: 100%; 
+    margin-top: 8px; 
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25); 
+  }
+  .btn-primary:hover { 
+    transform: translateY(-1.5px); 
+    box-shadow: 0 6px 18px rgba(99, 102, 241, 0.4); 
+    opacity: 0.95; 
+  }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:disabled, .btn-primary[disabled] {
+    background: var(--bg-hover) !important;
+    color: var(--text-muted) !important;
+    box-shadow: none !important;
+    cursor: not-allowed;
+    opacity: 0.6;
+    transform: none !important;
+  }
+  .btn-secondary { background: var(--bg-elevated); color: var(--text-primary); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--bg-hover); transform: translateY(-1px); }
+  .btn-outline { background: transparent; color: var(--accent-light); border: 1px solid var(--accent); }
+  .btn-outline:hover { background: var(--accent-glow); transform: translateY(-1px); }
+  .btn-sm { padding: 8px 16px; font-size: 13px; border-radius: 8px; }
+  .btn-danger { background: rgba(239, 68, 68, 0.12); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.2); }
+  .btn-danger:hover { background: rgba(239, 68, 68, 0.2); }
+  .btn-success { background: rgba(16, 185, 129, 0.12); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.2); }
+  .btn-success:hover { background: rgba(16, 185, 129, 0.2); }
+
+  .auth-alt { text-align: center; margin-top: 24px; font-size: 13px; color: var(--text-muted); }
+  .auth-alt a { color: var(--accent-light); text-decoration: none; font-weight: 600; }
+  .auth-alt a:hover { text-decoration: underline; }
+
+  .checkbox-row { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+  .checkbox-row input[type="checkbox"] { accent-color: var(--accent); width: 14px; height: 14px; }
+  .checkbox-row label { font-size: 12.5px; color: var(--text-secondary); cursor: pointer; }
+  .checkbox-row a { color: var(--accent-light); text-decoration: none; }
+  .checkbox-row a:hover { text-decoration: underline; }
+
+  .main-app { display: none; width: 100%; }
+  .main-app.active { display: flex; height: 100vh; overflow: hidden; }
+
+  .sidebar {
+    width: 220px; min-width: 220px;
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    transition: width var(--transition);
+  }
+
+  .sidebar-brand {
+    padding: 24px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .sidebar-brand-icon {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .sidebar-brand-icon svg { width: 18px; height: 18px; stroke: var(--accent-light); fill: none; stroke-width: 1.8; }
+  .sidebar-brand-name { font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 800; color: var(--text-primary); line-height: 1; letter-spacing: -0.3px; }
+  .sidebar-brand-sub { font-size: 10px; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase; margin-top: 3px; font-weight: 600; }
+
+  .sidebar-nav { flex: 1; padding: 16px 0; overflow-y: auto; }
+  .nav-section-label { font-size: 9.5px; font-weight: 700; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; padding: 12px 20px 6px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 20px;
+    font-size: 13.5px; font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition);
+    position: relative;
+  }
+  .nav-item:hover { background: var(--bg-hover); color: var(--accent); padding-left: 24px; }
+  .nav-item.active { background: var(--sidebar-active); color: var(--accent-light); }
+  .nav-item.active::before {
+    content: '';
+    position: absolute; left: 0; top: 15%; bottom: 15%;
+    width: 4px; background: var(--accent);
+    border-radius: 0 4px 4px 0;
+    box-shadow: 0 0 10px var(--accent);
+  }
+  .nav-item svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.5; flex-shrink: 0; }
+
+  .sidebar-footer { padding: 16px; border-top: 1px solid var(--border); }
+  .sidebar-logout {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px;
+    font-size: 13.5px; font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all var(--transition);
+  }
+  .sidebar-logout:hover { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+  .sidebar-logout svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+
+  .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--bg-base); }
+
+  .header {
+    background: var(--header-bg);
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    height: 64px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    z-index: 10;
+  }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .page-title { font-family: 'Outfit', sans-serif; font-size: 17px; font-weight: 700; color: var(--text-primary); }
+  .page-breadcrumb { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+  .header-right { display: flex; align-items: center; gap: 16px; }
+
+  .theme-toggle {
+    width: 38px; height: 38px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+  .theme-toggle:hover { background: var(--bg-hover); border-color: var(--border-strong); transform: scale(1.05); }
+  .theme-toggle svg { width: 18px; height: 18px; stroke: var(--text-secondary); fill: none; stroke-width: 1.5; }
+
+  .header-user {
+    display: flex; align-items: center; gap: 12px;
+    padding: 6px 12px 6px 8px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+  .header-user:hover { background: var(--bg-hover); border-color: var(--border-strong); }
+  .user-avatar {
+    width: 32px; height: 32px;
+    background: var(--accent-gradient);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: #fff;
+    box-shadow: 0 4px 8px rgba(99, 102, 241, 0.25);
+  }
+  .user-name { font-size: 13px; font-weight: 600; color: var(--text-primary); line-height: 1.2; }
+  .user-role { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  .module-content { flex: 1; overflow-y: auto; padding: 28px; }
+  .module { display: none; }
+  .module.active { display: block; animation: module-in 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+  @keyframes module-in { from { opacity:0; transform: translateY(12px); } to { opacity:1; transform: translateY(0); } }
+
+  .card, .report-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border-strong);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: var(--shadow);
+    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), border-color 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+  .card:hover, .report-card:hover { 
+    transform: translateY(-2px); 
+    box-shadow: var(--shadow-lg), 0 0 20px rgba(99, 102, 241, 0.08); 
+    border-color: rgba(99, 102, 241, 0.3); 
+  }
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .card-title { font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.2px; }
+  .card-subtitle { font-size: 12px; color: var(--text-muted); margin-top: 3px; font-weight: 500; }
+
+  .stats-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border-strong);
+    border-radius: 14px;
+    padding: 18px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: transform var(--transition), box-shadow var(--transition);
+  }
+  .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .stat-card::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+  .stat-card.blue::after { background: var(--accent-gradient); }
+  .stat-card.green::after { background: linear-gradient(90deg, var(--success), transparent); }
+  .stat-card.orange::after { background: linear-gradient(90deg, var(--warning), transparent); }
+  .stat-card.red::after { background: linear-gradient(90deg, var(--danger), transparent); }
+  .stat-card.teal::after { background: linear-gradient(90deg, #06b6d4, transparent); }
+  .stat-card.purple::after { background: linear-gradient(90deg, var(--chart-5), transparent); }
+  .stat-label { font-size: 11px; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+  .stat-value { font-size: 28px; font-weight: 800; color: var(--text-primary); font-family: 'DM Mono', monospace; line-height: 1; margin: 8px 0 6px; }
+  .stat-period { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+  .grid-col-7-5 { display: grid; grid-template-columns: 7.2fr 4.8fr; gap: 20px; }
+  .grid-col-5-7 { display: grid; grid-template-columns: 4.8fr 7.2fr; gap: 20px; }
+
+  .data-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+  .data-table th {
+    font-size: 11px; font-weight: 700; color: var(--text-secondary);
+    text-transform: uppercase; letter-spacing: 1px;
+    padding: 12px 16px; text-align: left;
+    border-bottom: 2px solid var(--border);
+    background: rgba(255,255,255,0.01);
+  }
+  .data-table td {
+    font-size: 13px; color: var(--text-secondary);
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    transition: all var(--transition);
+  }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: var(--bg-hover); color: var(--text-primary); }
+
+  .badge {
+    display: inline-flex; align-items: center;
+    padding: 4px 10px; border-radius: 6px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .badge-success { background: rgba(16, 185, 129, 0.12); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.2); }
+  .badge-warning { background: rgba(245, 158, 11, 0.12); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.2); }
+  .badge-danger { background: rgba(239, 68, 68, 0.12); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.2); }
+  .badge-info { background: rgba(99, 102, 241, 0.12); color: var(--accent-light); border: 1px solid rgba(99, 102, 241, 0.2); }
+  .badge-purple { background: rgba(168, 85, 247, 0.12); color: var(--chart-5); border: 1px solid rgba(168, 85, 247, 0.2); }
+
+  .pie-container { display: flex; align-items: center; gap: 24px; padding: 12px; }
+  .pie-chart { position: relative; width: 120px; height: 120px; flex-shrink: 0; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15)); }
+  .pie-chart svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .pie-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .pie-total { font-size: 22px; font-weight: 800; color: var(--text-primary); font-family: 'DM Mono', monospace; }
+  .pie-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+  .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; width: 160px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+  .legend-text { font-size: 12.5px; color: var(--text-secondary); font-weight: 500; }
+  .legend-pct { font-size: 12.5px; font-weight: 700; color: var(--text-primary); margin-left: auto; font-family: 'DM Mono', monospace; }
+
+  .progress-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .progress-label { font-size: 12px; color: var(--text-secondary); width: 60px; flex-shrink: 0; font-weight: 600; }
+  .progress-bar-wrap { flex: 1; height: 8px; background: var(--bg-elevated); border-radius: 4px; overflow: hidden; border: 1px solid var(--border); }
+  .progress-bar { height: 100%; border-radius: 4px; transition: width 1.2s cubic-bezier(0.25, 0.8, 0.25, 1); }
+  .progress-value { font-size: 12px; color: var(--text-primary); font-family: 'DM Mono', monospace; width: 36px; text-align: right; font-weight: 700; }
+
+  .upload-zone {
+    border: 2px dashed var(--border-strong);
+    border-radius: 14px;
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: all var(--transition);
+    background: var(--bg-elevated);
+    box-shadow: inset 0 0 12px rgba(99,102,241,0.03);
+  }
+  .upload-zone:hover { border-color: var(--accent); background: rgba(99, 102, 241, 0.05); }
+  .upload-icon { width: 48px; height: 48px; margin: 0 auto 16px; background: var(--bg-hover); border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); }
+  .upload-icon svg { width: 24px; height: 24px; stroke: var(--accent-light); fill: none; stroke-width: 1.5; }
+  .upload-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; }
+  .upload-subtitle { font-size: 12px; color: var(--text-secondary); }
+
+  .image-preview-box {
+    aspect-ratio: 16/7;
+    background: #030712;
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid var(--border-strong);
+    box-shadow: var(--shadow);
+  }
+  .oct-scan-placeholder {
+    width: 100%; height: 100%;
+    background: linear-gradient(180deg, #070a13 0%, #03050a 40%, #070a13 100%);
+    position: relative; overflow: hidden;
+  }
+  .oct-scan-line {
+    position: absolute; left: 0; right: 0;
+    height: 2px; background: linear-gradient(to right, transparent, rgba(99,102,241,0.8), transparent);
+    box-shadow: 0 0 12px rgba(99,102,241,0.8);
+    animation: scan-line 4s linear infinite;
+  }
+  @keyframes scan-line { 0% { top: 10%; opacity: 1; } 85% { opacity: 0.9; } 100% { top: 90%; opacity: 0; } }
+  .oct-layers { position: absolute; inset: 12%; }
+  .oct-layer { position: absolute; left: 0; right: 0; height: 3px; border-radius: 2px; }
+  .oct-layer-1 { top: 25%; background: rgba(99, 102, 241, 0.7); }
+  .oct-layer-2 { top: 40%; background: rgba(16, 185, 129, 0.6); height: 10px; border-radius: 5px; filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.4)); }
+  .oct-layer-3 { top: 58%; background: rgba(99, 102, 241, 0.45); }
+  .oct-layer-4 { top: 65%; background: rgba(168, 85, 247, 0.5); }
+  .oct-layer-5 { top: 75%; background: rgba(99, 102, 241, 0.3); }
+
+  .file-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+  .file-info-row { display: flex; justify-content: space-between; padding: 8px 12px; background: var(--bg-elevated); border-radius: 8px; border: 1px solid var(--border); }
+  .file-info-key { font-size: 11.5px; color: var(--text-muted); font-weight: 500; }
+  .file-info-val { font-size: 11.5px; font-weight: 600; color: var(--text-primary); font-family: 'DM Mono', monospace; }
+
+  .validation-badge { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 10px; margin-top: 16px; }
+  .validation-badge svg { width: 16px; height: 16px; stroke: var(--success); fill: none; stroke-width: 2.5; }
+  .validation-badge span { font-size: 12.5px; font-weight: 600; color: var(--success); }
+
+  .prediction-result-card { background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: 12px; padding: 20px; box-shadow: inset 0 0 15px rgba(99,102,241,0.05); }
+  .prediction-disease { font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 700; color: var(--accent-light); margin-bottom: 14px; }
+  .prediction-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .meta-label { font-size: 10px; color: var(--text-muted); font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; }
+  .meta-value { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-top: 3px; }
+  .meta-value.warning { color: var(--warning); }
+  .meta-value.accent { color: var(--accent-light); font-family: 'DM Mono', monospace; }
+
+  .confidence-ring { position: relative; width: 90px; height: 90px; flex-shrink: 0; filter: drop-shadow(0 4px 10px rgba(99,102,241,0.25)); }
+  .confidence-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .confidence-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .confidence-pct { font-size: 18px; font-weight: 800; color: var(--text-primary); font-family: 'DM Mono', monospace; line-height: 1; }
+  .confidence-sublabel { font-size: 8px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+
+  .scan-info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .scan-info-row:last-child { border-bottom: none; }
+  .scan-info-key { font-size: 12.5px; color: var(--text-muted); font-weight: 500; }
+  .scan-info-val { font-size: 12.5px; font-weight: 600; color: var(--text-primary); font-family: 'DM Mono', monospace; }
+
+  .heatmap-image { border-radius: 12px; overflow: hidden; border: 1px solid var(--border-strong); position: relative; width: 100%; }
+  .heatmap-base { width: 100%; aspect-ratio: 16/7; background: #010307; position: relative; overflow: hidden; display: block; }
+  .heatmap-base img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+  .heatmap-base img.heatmap-original-img { z-index: 0; }
+  .heatmap-base img.heatmap-overlay-img { z-index: 1; pointer-events: none; }
+  .heatmap-overlay {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    mix-blend-mode: multiply;
+    background: radial-gradient(ellipse 50% 60% at 55% 45%, rgba(239,68,68,0.35) 0%, rgba(245,158,11,0.25) 25%, rgba(99,102,241,0.15) 55%, transparent 75%);
+  }
+  .heatmap-scale { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+  .heatmap-gradient { flex: 1; height: 10px; border-radius: 5px; background: linear-gradient(90deg, var(--accent), var(--success), var(--warning), var(--danger)); }
+  .heatmap-scale-label { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+
+  .seg-image-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+  .seg-image { aspect-ratio: 16/9; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-strong); position: relative; }
+  .seg-image .seg-label { position: absolute; bottom: 8px; left: 8px; font-size: 10px; font-weight: 700; color: #fff; text-transform: uppercase; letter-spacing: 0.8px; background: rgba(0,0,0,0.65); padding: 4px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(4px); }
+  .seg-line-1 { position: absolute; bottom: 30%; left: 5%; right: 5%; height: 3px; background: rgba(16,185,129,0.8); border-radius: 2px; }
+  .seg-line-2 { position: absolute; bottom: 40%; left: 5%; right: 5%; height: 2px; background: rgba(239,68,68,0.7); border-radius: 2px; }
+
+  .seg-details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .seg-detail-row { display: flex; justify-content: space-between; padding: 10px 14px; background: var(--bg-elevated); border-radius: 8px; border: 1px solid var(--border); }
+  .seg-detail-key { font-size: 11.5px; color: var(--text-muted); font-weight: 500; }
+  .seg-detail-val { font-size: 11.5px; font-weight: 700; color: var(--text-primary); font-family: 'DM Mono', monospace; }
+
+  .seg-legend-item { display: flex; align-items: center; gap: 10px; }
+  .seg-legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+  .seg-legend-text { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
+
+  /* Premium Medical Report UI Updates */
+  .report-header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin-bottom: 24px; 
+    padding-bottom: 20px; 
+    border-bottom: 1px dashed var(--border); 
+  }
+  .report-title { 
+    font-family: 'Outfit', sans-serif;
+    font-size: 17px; 
+    font-weight: 800; 
+    color: var(--text-primary); 
+    letter-spacing: -0.3px;
+  }
+  .report-status { 
+    font-size: 12px; 
+    color: var(--text-muted); 
+    margin-top: 5px; 
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+  }
+  .report-status::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: var(--success);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--success);
+  }
+  .report-images-container {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 12px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    margin-bottom: 20px;
+  }
+  .report-images-grid { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr 1fr; 
+    gap: 12px; 
+  }
+  .report-preview-orig, .report-preview-heat, .report-preview-seg {
+    aspect-ratio: 1.1;
+    background: #030508;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid var(--border);
+  }
+  .report-preview-label {
+    position: absolute;
+    bottom: 6px;
+    left: 6px;
+    background: rgba(15, 23, 42, 0.8);
+    color: var(--text-primary);
+    font-size: 9.5px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+    z-index: 10;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    border: 1px solid rgba(255,255,255,0.06);
+    backdrop-filter: blur(4px);
+  }
+  .report-meta-grid { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 10px; 
+    margin-bottom: 20px; 
+  }
+  .report-meta-item { 
+    padding: 12px 14px; 
+    background: var(--bg-elevated); 
+    border-radius: 10px; 
+    border: 1px solid var(--border);
+    transition: all var(--transition);
+  }
+  .report-meta-item:focus-within {
+    background: var(--bg-hover);
+    border-color: var(--accent);
+    box-shadow: 0 0 8px var(--accent-glow);
+  }
+  .report-meta-label { 
+    font-size: 10px; 
+    color: var(--text-muted); 
+    text-transform: uppercase; 
+    letter-spacing: 0.8px; 
+    margin-bottom: 6px; 
+    font-weight: 700;
+  }
+  .report-meta-value { 
+    font-size: 14px; 
+    font-weight: 700; 
+    color: var(--text-primary); 
+    outline: none;
+  }
+  .report-section { 
+    margin-bottom: 20px; 
+    background: rgba(255, 255, 255, 0.005);
+    padding: 18px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.015);
+  }
+  .report-section-title { 
+    font-family: 'Outfit', sans-serif;
+    font-size: 12.5px; 
+    font-weight: 800; 
+    color: var(--accent-light); 
+    text-transform: uppercase; 
+    letter-spacing: 1.2px; 
+    margin-bottom: 12px; 
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .report-section-title::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--accent);
+  }
+  .report-text { 
+    font-size: 13px; 
+    color: var(--text-secondary); 
+    line-height: 1.7; 
+  }
+
+  /* Chatbot UI overrides & fixes */
+  .chat-suggest-btn {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    padding: 8px 16px;
+    border-radius: 24px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition);
+    outline: none;
+  }
+  .chat-suggest-btn:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent);
+    color: var(--text-primary);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Ensure completely visible, styling-compliant placeholder and text color in Assistant Chat box */
+  #chat-input {
+    background: var(--bg-elevated) !important;
+    color: var(--text-primary) !important;
+    caret-color: var(--accent) !important;
+  }
+  #chat-input::placeholder {
+    color: var(--text-muted) !important;
+    opacity: 0.85;
+  }
+
+  /* Pulsing mic animation */
+  @keyframes pulse-mic {
+    0% {
+      box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+      background: rgba(239, 68, 68, 0.1);
+      border-color: rgba(239, 68, 68, 0.5);
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+      background: rgba(239, 68, 68, 0.2);
+      border-color: rgba(239, 68, 68, 0.7);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+      background: rgba(239, 68, 68, 0.1);
+      border-color: rgba(239, 68, 68, 0.5);
+    }
+  }
+  .mic-recording {
+    animation: pulse-mic 1.5s infinite !important;
+    color: #ef4444 !important;
+    border-color: rgba(239, 68, 68, 0.6) !important;
+  }
+
+  .view-link { font-size: 12px; font-weight: 700; color: var(--accent-light); cursor: pointer; text-decoration: none; }
+  .view-link:hover { text-decoration: underline; }
+
+  .settings-section { margin-bottom: 24px; }
+  .settings-item-label { font-size: 11px; font-weight: 700; color: var(--text-secondary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.8px; }
+  .select-input { width: 100%; padding: 10px 14px; background: var(--input-bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-family: 'Inter', sans-serif; font-size: 13px; outline: none; cursor: pointer; transition: border-color var(--transition); }
+  .select-input:focus { border-color: var(--accent); }
+  .about-row { display: flex; justify-content: space-between; padding: 10px 14px; background: var(--bg-elevated); border-radius: 8px; margin-bottom: 8px; border: 1px solid var(--border); }
+  .about-key { font-size: 12.5px; color: var(--text-muted); font-weight: 500; }
+  .about-val { font-size: 12.5px; font-weight: 600; color: var(--text-primary); }
+
+  .theme-option {
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 10px;
+    transition: all var(--transition);
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 600;
+  }
+  .theme-option.selected { border-color: var(--accent); background: var(--accent-glow); color: var(--accent-light); }
+  .theme-swatch { width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--border-strong); }
+  .theme-swatch.dark { background: #030712; }
+  .theme-swatch.light { background: #f8fafc; }
+
+  .divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+  .sun-icon { display: none; }
+  .moon-icon { display: block; }
+  [data-theme="light"] .sun-icon { display: block; }
+  [data-theme="light"] .moon-icon { display: none; }
+
+  /* Futuristic Scanner HUD styles */
+  .scanner-container {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4/3;
+    background: #000;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 2px solid var(--border-strong);
+    box-shadow: inset 0 0 40px rgba(99,102,241,0.25), 0 8px 32px rgba(0,0,0,0.4);
+  }
+  .scanner-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 1s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+  .scanner-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    z-index: 5;
+  }
+  .scanner-grid {
+    position: absolute;
+    inset: 0;
+    background-size: 30px 30px;
+    background-image: 
+      linear-gradient(to right, rgba(99, 102, 241, 0.06) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(99, 102, 241, 0.06) 1px, transparent 1px);
+  }
+  .scanner-reticle-outer {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 170px;
+    height: 170px;
+    border: 2px dashed rgba(99, 102, 241, 0.45);
+    border-radius: 50%;
+    box-shadow: 0 0 25px rgba(99,102,241,0.2);
+    animation: rotate-reticle 25s linear infinite;
+  }
+  .scanner-reticle-inner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 125px;
+    height: 125px;
+    border: 1px solid rgba(16, 185, 129, 0.55);
+    border-radius: 50%;
+    box-shadow: 0 0 15px rgba(16,185,129,0.15);
+    animation: rotate-reticle-rev 15s linear infinite;
+  }
+  .scanner-crosshair-h {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 200px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.6), transparent);
+    transform: translate(-50%, -50%);
+  }
+  .scanner-crosshair-v {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 1px;
+    height: 200px;
+    background: linear-gradient(180deg, transparent, rgba(99, 102, 241, 0.6), transparent);
+    transform: translate(-50%, -50%);
+  }
+  .scanner-pupil-target {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 32px;
+    height: 32px;
+    border: 2px solid #f43f5e;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 15px rgba(244, 63, 94, 0.7);
+    transition: all 0.1s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+  .scanner-pupil-dot {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 8px;
+    height: 8px;
+    background: #f43f5e;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .scanner-laser {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: linear-gradient(180deg, transparent, rgba(16, 185, 129, 0.85), transparent);
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.85);
+    pointer-events: none;
+    z-index: 10;
+    display: none;
+  }
+  .scanner-laser.active {
+    display: block;
+    animation: laser-sweep 2.5s ease-in-out infinite;
+  }
+  .scanner-loading-screen {
+    position: absolute;
+    inset: 0;
+    background: rgba(3, 7, 18, 0.95);
+    backdrop-filter: blur(10px);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    z-index: 20;
+  }
+  .scanner-spinner {
+    width: 60px;
+    height: 60px;
+    border: 3px solid rgba(99,102,241,0.15);
+    border-top: 3px solid var(--accent);
+    border-radius: 50%;
+    animation: rotate-reticle 1s linear infinite;
+    box-shadow: 0 0 15px rgba(99,102,241,0.2);
+  }
+  .scanner-loading-text {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--accent-light);
+    font-family: 'Outfit', sans-serif;
+    letter-spacing: 0.5px;
+  }
+  .scanner-loading-subtext {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+  }
+  @keyframes rotate-reticle {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+  }
+  @keyframes rotate-reticle-rev {
+    0% { transform: translate(-50%, -50%) rotate(360deg); }
+    100% { transform: translate(-50%, -50%) rotate(0deg); }
+  }
+  @keyframes laser-sweep {
+    0% { top: 5%; }
+    50% { top: 95%; }
+    100% { top: 5%; }
+  }
+
+  /* ADVANCED CLINICAL FEATURES SUITE */
+  .audio-briefing-bar {
+    background: linear-gradient(135deg, rgba(2,132,199,0.08) 0%, rgba(13,148,136,0.06) 100%);
+    border: 1px solid rgba(56,189,248,0.25);
+    border-radius: 14px;
+    padding: 12px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    box-shadow: 0 4px 16px rgba(2,132,199,0.08);
+  }
+  .audio-visualizer {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    height: 22px;
+  }
+  .audio-bar {
+    width: 3px;
+    height: 6px;
+    background: #38bdf8;
+    border-radius: 2px;
+    transition: height 0.15s ease;
+  }
+  .audio-visualizer.playing .audio-bar:nth-child(1) { animation: wave 0.8s infinite ease-in-out; }
+  .audio-visualizer.playing .audio-bar:nth-child(2) { animation: wave 0.6s infinite 0.1s ease-in-out; }
+  .audio-visualizer.playing .audio-bar:nth-child(3) { animation: wave 1.0s infinite 0.2s ease-in-out; }
+  .audio-visualizer.playing .audio-bar:nth-child(4) { animation: wave 0.7s infinite 0.3s ease-in-out; }
+  .audio-visualizer.playing .audio-bar:nth-child(5) { animation: wave 0.9s infinite 0.15s ease-in-out; }
+  .audio-visualizer.playing .audio-bar:nth-child(6) { animation: wave 0.65s infinite 0.25s ease-in-out; }
+  @keyframes wave {
+    0%, 100% { height: 4px; }
+    50% { height: 20px; }
+  }
+
+  /* Biomarkers Grid */
+  .biomarker-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-top: 18px;
+  }
+  .biomarker-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+  }
+  .biomarker-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent);
+  }
+  .biomarker-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  .biomarker-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .biomarker-status {
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* Triage Banner */
+  .triage-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-radius: 12px;
+    margin-top: 16px;
+    background: rgba(2,132,199,0.06);
+    border: 1px solid rgba(2,132,199,0.2);
+  }
+  .triage-beacon {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 8px #10b981;
+    animation: pulse-beacon 1.8s infinite;
+  }
+  @keyframes pulse-beacon {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.85); }
+  }
+
+  /* PACS Curtain Comparison Container */
+  .pacs-curtain-container {
+    --curtain-pos: 50%;
+    position: relative;
+    width: 100%;
+    height: 380px;
+    border-radius: 10px;
+    overflow: hidden;
+    user-select: none;
+    background: #030508;
+    border: 1px solid var(--border);
+    cursor: ew-resize;
+  }
+  .pacs-curtain-under, .pacs-curtain-over {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .pacs-curtain-under img, .pacs-curtain-over img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+  }
+  .pacs-curtain-over {
+    clip-path: polygon(0 0, var(--curtain-pos, 50%) 0, var(--curtain-pos, 50%) 100%, 0 100%);
+    border-right: none;
+    box-shadow: none;
+  }
+  .pacs-curtain-divider {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: var(--curtain-pos, 50%);
+    width: 4px;
+    margin-left: -2px;
+    cursor: ew-resize;
+    z-index: 15;
+    background: #38bdf8;
+    box-shadow: 0 0 10px rgba(56,189,248,0.8);
+    pointer-events: auto;
+  }
+  .pacs-curtain-handle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #0284c7;
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 12px rgba(2,132,199,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    cursor: ew-resize;
+    z-index: 16;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  /* Digital Caliper Overlay */
+  .caliper-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 25;
+    cursor: crosshair;
+    pointer-events: none;
+  }
+  .caliper-canvas.active {
+    pointer-events: auto;
+  }
+  .caliper-readout {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    background: rgba(15,23,42,0.85);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(56,189,248,0.4);
+    color: #38bdf8;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    z-index: 30;
+    display: none;
+  }
+
+  /* PACS Adjustment Toolbar */
+  .pacs-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 8px 14px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    font-size: 12px;
+  }
+  .pacs-tool-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .pacs-slider {
+    width: 90px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- LOGIN PAGE -->
+  <div class="page auth-page active" id="page-login">
+    <div class="auth-bg"></div>
+    <div class="auth-bg-grid"></div>
+    <div class="retinal-orb orb-1"></div>
+    <div class="retinal-orb orb-2"></div>
+    <div class="retinal-orb orb-3"></div>
+    
+    <div class="auth-split-wrapper">
+      <!-- Left: Visual Clinical Showcase -->
+      <div class="auth-showcase-pane">
+        <div class="auth-showcase-content">
+          <div class="auth-showcase-badge">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12 5C7 5 2.73 8.11 1 12.5 2.73 16.89 7 20 12 20s9.27-3.11 11-7.5C21.27 8.11 17 5 12 5z"/></svg>
+            Clinical Ophthalmology AI v2.4
+          </div>
+          <div class="auth-showcase-title">Next-Gen Retinal OCT & Fundus Diagnostics</div>
+          <div class="auth-showcase-desc">Real-time sub-second segmentation, Grad-CAM neural explainability, and multi-condition macular pathology detection.</div>
+          
+          <div class="auth-features-list">
+            <div class="auth-feature-item">
+              <div class="auth-feature-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <span>Attention U-Net Subretinal Fluid & Lesion Mapping</span>
+            </div>
+            <div class="auth-feature-item">
+              <div class="auth-feature-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <span>Multi-Condition Ensemble (CNV, DME, Drusen, Normal)</span>
+            </div>
+            <div class="auth-feature-item">
+              <div class="auth-feature-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <span>Multilingual Clinical RAG Intelligence (EN / தமிழ்)</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="position:relative; z-index:2; border-top:1px solid rgba(255,255,255,0.12); padding-top:16px; display:flex; justify-content:space-between; align-items:center; font-size:11px; color:#94a3b8;">
+          <span>Biometric System Security</span>
+          <span style="color:#38bdf8; font-weight:600;">● Neural Core Online</span>
+        </div>
+      </div>
+
+      <!-- Right: Authentication Form -->
+      <div class="auth-form-pane">
+        <div class="auth-brand" style="margin-bottom:20px; text-align:left;">
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+            <div class="brand-icon" style="margin:0; width:44px; height:44px;">
+              <svg viewBox="0 0 24 24" style="width:22px; height:22px;"><circle cx="12" cy="12" r="3"/><path d="M12 5C7 5 2.73 8.11 1 12.5 2.73 16.89 7 20 12 20s9.27-3.11 11-7.5C21.27 8.11 17 5 12 5z"/></svg>
+            </div>
+            <div>
+              <div class="brand-name" style="font-size:22px;">VisionCare</div>
+              <div class="brand-tagline" style="margin-top:1px;">AI Retinal Diagnostics</div>
+            </div>
+          </div>
+          <div class="auth-title" style="font-size:20px;">Welcome Back</div>
+          <div class="auth-subtitle" style="margin-bottom:16px;">Sign in to access your clinical diagnostic console</div>
+        </div>
+
+        <div class="form-group">
+          <div class="input-row">
+            <span class="input-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+            <input class="form-input" type="text" placeholder="Email or Username" value="doctor@visioncare.ai">
+          </div>
+        </div>
+        <div class="form-group">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <span class="form-label" style="margin:0;">Password</span>
+            <a href="#" class="forgot-link" style="float:none;">Forgot Password?</a>
+          </div>
+          <div class="input-row">
+            <span class="input-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+            <input class="form-input" type="password" placeholder="Password" value="password123">
+          </div>
+        </div>
+        <div class="checkbox-row" style="margin-bottom:8px;">
+          <input type="checkbox" id="remember" checked>
+          <label for="remember">Remember Me</label>
+        </div>
+        <button class="btn btn-primary" type="button">Login</button>
+        <button class="btn btn-secondary" type="button" onclick="loginDemoDoctor()" style="width:100%; margin-top:10px; border-color:var(--accent); font-size:12.5px; font-weight:700; color:var(--accent-light);">⚡ 1-Click Clinician Demo Login (Dr. Elena Vance)</button>
+        <div class="auth-alt" style="margin-top:16px;">Don't have an account? <a href="#" onclick="showPage('page-signup')">Sign Up</a></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIGNUP PAGE -->
+  <div class="page auth-page" id="page-signup">
+    <div class="auth-bg"></div>
+    <div class="auth-bg-grid"></div>
+    <div class="retinal-orb orb-1"></div>
+    <div class="retinal-orb orb-2"></div>
+    
+    <div class="auth-split-wrapper">
+      <!-- Left: Visual Clinical Showcase -->
+      <div class="auth-showcase-pane">
+        <div class="auth-showcase-content">
+          <div class="auth-showcase-badge">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12 5C7 5 2.73 8.11 1 12.5 2.73 16.89 7 20 12 20s9.27-3.11 11-7.5C21.27 8.11 17 5 12 5z"/></svg>
+            Clinician Registration
+          </div>
+          <div class="auth-showcase-title">Join the Future of Precision Ophthalmology</div>
+          <div class="auth-showcase-desc">Instant cloud-backed macular assessment with high-fidelity Grad-CAM visualization and automated bilingual diagnostic reporting.</div>
+          
+          <div class="auth-features-list">
+            <div class="auth-feature-item">
+              <div class="auth-feature-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <span>Interactive Longitudinal Patient History Tracking</span>
+            </div>
+            <div class="auth-feature-item">
+              <div class="auth-feature-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <span>One-Click Clinical PDF Report Generation</span>
+            </div>
+            <div class="auth-feature-item">
+              <div class="auth-feature-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <span>AI Chat Assistant with Speech Recognition</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="position:relative; z-index:2; border-top:1px solid rgba(255,255,255,0.12); padding-top:16px; display:flex; justify-content:space-between; align-items:center; font-size:11px; color:#94a3b8;">
+          <span>Secure AES SQLite Vault</span>
+          <span style="color:#10b981; font-weight:600;">● Active Encryption</span>
+        </div>
+      </div>
+
+      <!-- Right: Signup Form -->
+      <div class="auth-form-pane">
+        <div class="auth-brand" style="margin-bottom:16px; text-align:left;">
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+            <div class="brand-icon" style="margin:0; width:40px; height:40px;">
+              <svg viewBox="0 0 24 24" style="width:20px; height:20px;"><circle cx="12" cy="12" r="3"/><path d="M12 5C7 5 2.73 8.11 1 12.5 2.73 16.89 7 20 12 20s9.27-3.11 11-7.5C21.27 8.11 17 5 12 5z"/></svg>
+            </div>
+            <div>
+              <div class="brand-name" style="font-size:20px;">VisionCare</div>
+              <div class="brand-tagline" style="margin-top:1px;">AI Retinal Diagnostics</div>
+            </div>
+          </div>
+          <div class="auth-title" style="font-size:19px;">Create Account</div>
+          <div class="auth-subtitle" style="margin-bottom:14px; font-size:12.5px;">Register your clinician profile to get started</div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:14px;">
+          <div class="input-row">
+            <span class="input-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+            <input class="form-input" type="text" placeholder="Full Name">
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <div class="input-row">
+            <span class="input-icon"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
+            <input class="form-input" type="email" placeholder="Email">
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <div class="input-row">
+            <span class="input-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+            <input class="form-input" type="password" placeholder="Password">
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <div class="input-row">
+            <span class="input-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+            <input class="form-input" type="password" placeholder="Confirm Password">
+          </div>
+        </div>
+        <div class="checkbox-row" style="margin-bottom:12px;">
+          <input type="checkbox" id="terms">
+          <label for="terms">I agree to the <a href="#">Terms and Conditions</a></label>
+        </div>
+        <button class="btn btn-primary" type="button">Sign Up</button>
+        <div class="auth-alt" style="margin-top:14px;">Already have an account? <a href="#" onclick="showPage('page-login')">Login</a></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN APPLICATION -->
+  <div class="main-app" id="main-app">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="sidebar-brand-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 5C7 5 2.73 8.11 1 12.5 2.73 16.89 7 20 12 20s9.27-3.11 11-7.5C21.27 8.11 17 5 12 5z"/></svg>
+        </div>
+        <div>
+          <div class="sidebar-brand-name">VisionCare</div>
+          <div class="sidebar-brand-sub">Retinal OCT Analysis</div>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Main</div>
+        <div class="nav-item active" onclick="switchModule('dashboard', this)">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Dashboard
+        </div>
+        <div class="nav-item" onclick="switchModule('upload', this)">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Upload OCT
+        </div>
+        <div class="nav-item" onclick="switchModule('prediction', this)">
+          <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          AI Prediction
+        </div>
+        <div class="nav-item" onclick="switchModule('heatmap', this)">
+          <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          Heatmap
+        </div>
+        <div class="nav-item" onclick="switchModule('segmentation', this)">
+          <svg viewBox="0 0 24 24"><path d="M11 19H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5"/><path d="M13 5h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-5"/><polyline points="8 10 12 6 16 10"/><line x1="12" y1="6" x2="12" y2="18"/></svg>
+          Segmentation
+        </div>
+        <div class="nav-section-label">Reports</div>
+        <div class="nav-item" onclick="switchModule('reports', this)">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          Reports
+        </div>
+        <div class="nav-item" onclick="switchModule('history', this)">
+          <svg viewBox="0 0 24 24"><polyline points="12 8 12 12 14 14"/><path d="M3.05 11a9 9 0 1 0 .5-4.478"/><polyline points="3 3 3 9 9 9"/></svg>
+          History
+        </div>
+        <div class="nav-item" onclick="switchModule('chatbot', this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+          AI Assistant
+        </div>
+        <div class="nav-section-label">System</div>
+        <div class="nav-item" onclick="switchModule('settings', this)">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Settings
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-logout" onclick="logout()">
+          <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Logout
+        </div>
+      </div>
+    </aside>
+
+    <div class="main-content">
+      <header class="header">
+        <div class="header-left">
+          <div>
+            <div class="page-title" id="header-title">Dashboard Overview</div>
+            <div class="page-breadcrumb" id="header-crumb">VisionCare / Dashboard</div>
+          </div>
+        </div>
+        <div class="header-right">
+          <div class="theme-toggle" onclick="toggleTheme()">
+            <svg class="moon-icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            <svg class="sun-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          </div>
+          <div class="header-user">
+            <div class="user-avatar">DA</div>
+            <div>
+              <div class="user-name">Dr. Arjun</div>
+              <div class="user-role">Ophthalmologist</div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="module-content">
+
+        <!-- DASHBOARD -->
+        <div class="module active" id="mod-dashboard">
+          
+          <!-- Clinician Executive Command Header -->
+          <div class="dash-command-header">
+            <div class="dash-greeting-wrap">
+              <div class="dash-user-badge">DA</div>
+              <div>
+                <div class="dash-greeting-title">
+                  Good Day, Dr. Arjun
+                  <span style="font-size:11px; font-weight:700; color:#38bdf8; background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); border-radius:20px; padding:2px 10px; display:inline-flex; align-items:center; gap:6px;">
+                    <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#10b981; box-shadow:0 0 6px #10b981;"></span>
+                    Online • Diagnostic Wing
+                  </span>
+                </div>
+                <div class="dash-greeting-sub">AI-Assisted Spectral Domain OCT Macular Telemetry • Department of Ophthalmology</div>
+              </div>
+            </div>
+            
+            <div class="dash-action-cluster">
+              <button class="btn btn-primary" onclick="switchModule('upload')" style="display:flex; align-items:center; gap:8px; font-weight:700; padding:10px 18px; border-radius:10px; box-shadow:0 4px 14px rgba(2,132,199,0.35);">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                + Launch New Scan
+              </button>
+              <button class="btn btn-outline" onclick="switchModule('chatbot')" style="display:flex; align-items:center; gap:8px; font-weight:600; padding:10px 16px; border-radius:10px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                AI Retina Consult
+              </button>
+              <button class="btn btn-secondary" onclick="switchModule('history')" style="display:flex; align-items:center; gap:8px; font-weight:600; padding:10px 16px; border-radius:10px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                Patient History
+              </button>
+            </div>
+          </div>
+
+
+
+          <!-- Metric Deck (6 Cards matching updateDashboardUI selector: #mod-dashboard .stat-value) -->
+          <div class="stats-grid" style="grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 24px;">
+            <!-- 1. Total Analyses -->
+            <div class="stat-card blue">
+              <div class="stat-card-top">
+                <div class="stat-card-icon" style="background:rgba(2,132,199,0.12); color:#0284c7;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                </div>
+                <span class="stat-card-trend" style="background:rgba(2,132,199,0.1); color:#38bdf8;">All Time</span>
+              </div>
+              <div class="stat-label">Total Analyses</div>
+              <div class="stat-value">0</div>
+              <div class="stat-period">Cumulative Scans</div>
+            </div>
+
+            <!-- 2. Healthy Cases -->
+            <div class="stat-card green">
+              <div class="stat-card-top">
+                <div class="stat-card-icon" style="background:rgba(16,185,129,0.12); color:#10b981;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </div>
+                <span class="stat-card-trend" style="background:rgba(16,185,129,0.1); color:#34d399;">Optimal</span>
+              </div>
+              <div class="stat-label">Healthy Retinas</div>
+              <div class="stat-value">0</div>
+              <div class="stat-period">Preserved Fovea</div>
+            </div>
+
+            <!-- 3. Disease Cases -->
+            <div class="stat-card orange">
+              <div class="stat-card-top">
+                <div class="stat-card-icon" style="background:rgba(245,158,11,0.12); color:#f59e0b;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                </div>
+                <span class="stat-card-trend" style="background:rgba(245,158,11,0.1); color:#fbbf24;">Detected</span>
+              </div>
+              <div class="stat-label">Pathology Cases</div>
+              <div class="stat-value">0</div>
+              <div class="stat-period">Macular Lesions</div>
+            </div>
+
+            <!-- 4. Critical Cases -->
+            <div class="stat-card red">
+              <div class="stat-card-top">
+                <div class="stat-card-icon" style="background:rgba(239,68,68,0.12); color:#ef4444;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                </div>
+                <span class="stat-card-trend" style="background:rgba(239,68,68,0.1); color:#f87171;">Urgent</span>
+              </div>
+              <div class="stat-label">Critical Cases</div>
+              <div class="stat-value">0</div>
+              <div class="stat-period">Urgent Triaged</div>
+            </div>
+
+            <!-- 5. Active Patients -->
+            <div class="stat-card teal">
+              <div class="stat-card-top">
+                <div class="stat-card-icon" style="background:rgba(6,182,212,0.12); color:#06b6d4;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+                <span class="stat-card-trend" style="background:rgba(6,182,212,0.1); color:#22d3ee;">Cohort</span>
+              </div>
+              <div class="stat-label">Active Patients</div>
+              <div class="stat-value">0</div>
+              <div class="stat-period">Clinical Profiles</div>
+            </div>
+
+            <!-- 6. Avg Confidence -->
+            <div class="stat-card purple">
+              <div class="stat-card-top">
+                <div class="stat-card-icon" style="background:rgba(168,85,247,0.12); color:#a855f7;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                </div>
+                <span class="stat-card-trend" style="background:rgba(168,85,247,0.1); color:#c084fc;">High Acc.</span>
+              </div>
+              <div class="stat-label">Avg. Confidence</div>
+              <div class="stat-value" style="font-size:24px;">0%</div>
+              <div class="stat-period">Neural Certainty</div>
+            </div>
+          </div>
+
+          <!-- Macular Pathology Spectrum & Clinical Distribution -->
+          <div style="margin-bottom: 24px;">
+            <div class="card" style="display:flex; flex-direction:column; justify-content:space-between;">
+              <div>
+                <div class="card-header">
+                  <div>
+                    <div class="card-title" style="display:flex; align-items:center; gap:8px;">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10"/></svg>
+                      Macular Pathology Spectrum
+                    </div>
+                    <div class="card-subtitle">Cohort prevalence & classification distribution</div>
+                  </div>
+                  <span class="badge badge-info" style="font-size:10px;">Live Registry</span>
+                </div>
+
+                <div class="pie-container" style="margin: 10px 0;">
+                  <div class="pie-chart">
+                    <svg viewBox="0 0 36 36">
+                      <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--bg-elevated)" stroke-width="3.8"/>
+                      <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--chart-1)" stroke-width="3.8" stroke-dasharray="35 65" stroke-dashoffset="0"/>
+                      <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--chart-2)" stroke-width="3.8" stroke-dasharray="25 75" stroke-dashoffset="-35"/>
+                      <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--chart-3)" stroke-width="3.8" stroke-dasharray="20 80" stroke-dashoffset="-60"/>
+                      <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--chart-4)" stroke-width="3.8" stroke-dasharray="15 85" stroke-dashoffset="-80"/>
+                      <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--chart-5)" stroke-width="3.8" stroke-dasharray="5 95" stroke-dashoffset="-95"/>
+                    </svg>
+                    <div class="pie-center"><div class="pie-total">128</div><div class="pie-label">Scans</div></div>
+                  </div>
+                  <div>
+                    <div class="legend-item"><div class="legend-dot" style="background:var(--chart-1)"></div><div class="legend-text">DME (Edema)</div><div class="legend-pct">35%</div></div>
+                    <div class="legend-item"><div class="legend-dot" style="background:var(--chart-2)"></div><div class="legend-text">CNV (Neovascular)</div><div class="legend-pct">25%</div></div>
+                    <div class="legend-item"><div class="legend-dot" style="background:var(--chart-3)"></div><div class="legend-text">Drusen (Dry AMD)</div><div class="legend-pct">20%</div></div>
+                    <div class="legend-item"><div class="legend-dot" style="background:var(--chart-4)"></div><div class="legend-text">Normal Healthy</div><div class="legend-pct">15%</div></div>
+                    <div class="legend-item"><div class="legend-dot" style="background:var(--chart-5)"></div><div class="legend-text">Other Retinopathies</div><div class="legend-pct">5%</div></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Clinical Recommendation Advisory -->
+              <div style="background: rgba(2,132,199,0.06); border: 1px solid rgba(56,189,248,0.22); border-radius: 12px; padding: 12px 14px; margin-top: 12px; display:flex; align-items:flex-start; gap:10px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5" style="flex-shrink:0; margin-top:2px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                <div style="font-size:11.5px; color:var(--text-secondary); line-height:1.5;">
+                  <strong style="color:var(--text-primary);">Clinical Advisory:</strong> Severe DME cystoid fluid or sub-RPE CNV membranes trigger automated high-priority referral recommendations for anti-VEGF intervention.
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- UPLOAD OCT -->
+        <div class="module" id="mod-upload">
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-header"><div class="card-title">Retinal Scan Input</div></div>
+              
+              <!-- Quick Test Cases Bar -->
+              <div style="background:var(--bg-elevated); border:1px solid var(--border); border-radius:12px; padding:10px 14px; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
+                <span style="font-size:11px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.5px;">⚡ Quick Test Cases:</span>
+                <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                  <button class="btn btn-outline btn-sm" onclick="loadSampleScan('normal', 'Normal Retina')" style="height:28px; padding:0 10px; font-size:11px; font-weight:600;">Normal</button>
+                  <button class="btn btn-outline btn-sm" onclick="loadSampleScan('dme', 'Diabetic Macular Edema')" style="height:28px; padding:0 10px; font-size:11px; font-weight:600;">DME</button>
+                  <button class="btn btn-outline btn-sm" onclick="loadSampleScan('cnv', 'Choroidal Neovascularization')" style="height:28px; padding:0 10px; font-size:11px; font-weight:600;">CNV</button>
+                  <button class="btn btn-outline btn-sm" onclick="loadSampleScan('drusen', 'Drusen')" style="height:28px; padding:0 10px; font-size:11px; font-weight:600;">Drusen</button>
+                </div>
+              </div>
+
+              <!-- Tab Navigation -->
+              <div id="upload-tab-nav" style="display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 12px; width: 100%;">
+                <button id="upload-tab-file" class="btn btn-primary btn-sm" onclick="switchUploadTab('file')" style="flex: 1; justify-content: center; height: 36px; padding: 0;">📁 File Upload</button>
+                <button id="upload-tab-camera" class="btn btn-outline btn-sm" onclick="switchUploadTab('camera')" style="flex: 1; justify-content: center; height: 36px; padding: 0;">📷 Live Eye Scanner</button>
+              </div>
+
+              <!-- File Upload Pane -->
+              <div id="pane-upload-file" style="display: block; width: 100%;">
+                <div class="upload-zone">
+                  <div class="upload-icon"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+                  <div class="upload-title">Drag and drop your OCT image here</div>
+                  <div class="upload-subtitle">or click to browse</div>
+                </div>
+                <button class="btn btn-secondary btn-sm" style="margin-top:10px; width: 100%;" type="button">Browse Files</button>
+              </div>
+
+              <!-- Live Camera Pane -->
+              <div id="pane-upload-camera" style="display: none; width: 100%;">
+                <div class="scanner-container">
+                  <!-- Live video stream -->
+                  <video id="camera-stream" class="scanner-video" autoplay playsinline></video>
+                  <canvas id="camera-canvas" style="display: none;"></canvas>
+                  
+                  <!-- HUD Overlays -->
+                  <div class="scanner-overlay">
+                    <div class="scanner-grid"></div>
+                    <div class="scanner-reticle-outer"></div>
+                    <div class="scanner-reticle-inner"></div>
+                    <div class="scanner-crosshair-h"></div>
+                    <div class="scanner-crosshair-v"></div>
+                    
+                    <!-- Advanced Pupil Target Locking ring (moved dynamically by lock algorithm) -->
+                    <div id="scanner-pupil" class="scanner-pupil-target">
+                      <div class="scanner-pupil-dot"></div>
+                    </div>
+                    
+                    <!-- System telemetry readout -->
+                    <div style="position: absolute; top: 12px; left: 12px; font-family: 'DM Mono', monospace; font-size: 9px; color: var(--accent-light); text-shadow: 0 0 4px #000; line-height: 1.4;">
+                      SYS STAT: <span id="hud-sys-stat" style="color: #ef4444;">OFFLINE</span><br/>
+                      AUTOLOCK: <span id="hud-autolock">STANDBY</span><br/>
+                      ZOOM FACT: <span id="hud-zoom">1.0X</span>
+                    </div>
+
+                    <div style="position: absolute; top: 12px; right: 12px; font-family: 'DM Mono', monospace; font-size: 9px; color: var(--accent-light); text-shadow: 0 0 4px #000; text-align: right; line-height: 1.4;">
+                      LOCK: <span id="hud-lock-status">NONE</span><br/>
+                      X-POS: <span id="hud-x-pos">0.00</span><br/>
+                      Y-POS: <span id="hud-y-pos">0.00</span>
+                    </div>
+                    
+                    <!-- Sweep target prompt -->
+                    <div id="hud-target-prompt" style="position: absolute; bottom: 12px; font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text-muted); text-shadow: 0 0 4px #000; font-weight: 600; text-transform: uppercase;">
+                      Camera Inactive
+                    </div>
+                  </div>
+                  
+                  <!-- Sweep Laser beam -->
+                  <div id="camera-laser" class="scanner-laser"></div>
+                  
+                  <!-- Advanced cross-section live scanning simulation loader -->
+                  <div id="scanner-loader" class="scanner-loading-screen">
+                    <div class="scanner-spinner"></div>
+                    <div class="scanner-loading-text" id="scanner-loader-title">Initiating Deep Scan...</div>
+                    <div class="scanner-loading-subtext" id="scanner-loader-sub">Acquiring retinal layers...</div>
+                  </div>
+                </div>
+                
+                <!-- Controls -->
+                <div style="display: flex; gap: 10px; margin-top: 12px;">
+                  <button id="btn-camera-toggle" class="btn btn-secondary btn-sm" onclick="toggleCamera()" style="flex: 1; height: 38px; font-size: 11px;">Start Camera</button>
+                  <button id="btn-camera-capture" class="btn btn-primary btn-sm" onclick="captureEyeScan()" style="flex: 1.5; height: 38px; font-size: 11px;" disabled>Capture & Scan</button>
+                </div>
+              </div>
+
+              <!-- General status indicator and execution button -->
+              <div id="validation-status" style="display:none;" class="validation-badge">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Retinal OCT image detected</span>
+              </div>
+              <button id="btn-upload-analyze" class="btn btn-primary" style="margin-top:16px; width: 100%;" type="button">Analyze Image</button>
+            </div>
+            <div class="card">
+              <div class="card-header"><div class="card-title">Image Preview</div></div>
+              <div class="image-preview-box">
+                <div class="oct-scan-placeholder">
+                  <div class="oct-layers">
+                    <div class="oct-layer oct-layer-1"></div>
+                    <div class="oct-layer oct-layer-2"></div>
+                    <div class="oct-layer oct-layer-3"></div>
+                    <div class="oct-layer oct-layer-4"></div>
+                    <div class="oct-layer oct-layer-5"></div>
+                  </div>
+                  <div class="oct-scan-line"></div>
+                </div>
+              </div>
+              <div class="card-subtitle" style="margin:14px 0 8px;">Image Information</div>
+              <div class="file-info-grid" id="file-info">
+                <div class="file-info-row"><span class="file-info-key">File Name</span><span class="file-info-val">—</span></div>
+                <div class="file-info-row"><span class="file-info-key">File Type</span><span class="file-info-val">—</span></div>
+                <div class="file-info-row"><span class="file-info-key">File Size</span><span class="file-info-val">—</span></div>
+                <div class="file-info-row"><span class="file-info-key">Resolution</span><span class="file-info-val">—</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI PREDICTION -->
+        <div class="module" id="mod-prediction">
+
+          <!-- 1. AI Clinical Audio Briefing Player -->
+          <div class="audio-briefing-bar">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <button id="btn-audio-briefing" class="btn btn-primary btn-sm" onclick="toggleAudioBriefing()" style="display:flex; align-items:center; gap:8px; height:36px; padding:0 16px; border-radius:20px;">
+                <svg id="audio-icon-play" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                <svg id="audio-icon-pause" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="display:none;"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                <span id="audio-briefing-label">AI Audio Clinical Briefing</span>
+              </button>
+              
+              <div id="audio-visualizer" class="audio-visualizer">
+                <div class="audio-bar"></div>
+                <div class="audio-bar"></div>
+                <div class="audio-bar"></div>
+                <div class="audio-bar"></div>
+                <div class="audio-bar"></div>
+                <div class="audio-bar"></div>
+              </div>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+              <span style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Voice:</span>
+              <button id="audio-lang-en" class="btn btn-primary btn-sm" onclick="setAudioLanguage('en')" style="height:26px; font-size:10px; padding:0 10px; border-radius:14px;">English</button>
+              <button id="audio-lang-ta" class="btn btn-outline btn-sm" onclick="setAudioLanguage('ta')" style="height:26px; font-size:10px; padding:0 10px; border-radius:14px;">தமிழ்</button>
+              <span style="font-size:11px; color:var(--text-muted); margin-left:8px;" id="audio-status-text">Ready to synthesize</span>
+            </div>
+          </div>
+
+          <!-- 2. Primary Scan & Results Grid -->
+          <div class="grid-col-5-7">
+            <div class="card">
+              <div class="card-header"><div class="card-title">OCT Scan</div></div>
+              <div class="image-preview-box">
+                <div class="oct-scan-placeholder">
+                  <div class="oct-layers"><div class="oct-layer oct-layer-1"></div><div class="oct-layer oct-layer-2"></div><div class="oct-layer oct-layer-3"></div><div class="oct-layer oct-layer-4"></div><div class="oct-layer oct-layer-5"></div></div>
+                  <div class="oct-scan-line"></div>
+                </div>
+              </div>
+              <div style="margin-top:14px;">
+                <div class="card-subtitle" style="margin-bottom:10px;">Disease Probabilities</div>
+                <div class="progress-row"><span class="progress-label">DME</span><div class="progress-bar-wrap"><div class="progress-bar" style="width:93%;background:var(--chart-1)"></div></div><span class="progress-value">93%</span></div>
+                <div class="progress-row"><span class="progress-label">CNV</span><div class="progress-bar-wrap"><div class="progress-bar" style="width:4%;background:var(--chart-2)"></div></div><span class="progress-value">4%</span></div>
+                <div class="progress-row"><span class="progress-label">Drusen</span><div class="progress-bar-wrap"><div class="progress-bar" style="width:7%;background:var(--chart-3)"></div></div><span class="progress-value">7%</span></div>
+                <div class="progress-row"><span class="progress-label">Normal</span><div class="progress-bar-wrap"><div class="progress-bar" style="width:1%;background:var(--chart-4)"></div></div><span class="progress-value">1%</span></div>
+                <div class="progress-row"><span class="progress-label">Others</span><div class="progress-bar-wrap"><div class="progress-bar" style="width:0%;background:var(--chart-5)"></div></div><span class="progress-value">0%</span></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><div class="card-title">Prediction Result</div></div>
+              <div class="prediction-result-card" style="margin-bottom:14px;">
+                <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Predicted Disease</div>
+                <div class="prediction-disease">Diabetic Macular Edema (DME)</div>
+                <div style="display:flex;align-items:center;gap:16px;">
+                  <div class="confidence-ring">
+                    <svg viewBox="0 0 36 36">
+                      <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--bg-elevated)" stroke-width="3"/>
+                      <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--accent)" stroke-width="3" stroke-dasharray="93 7"/>
+                    </svg>
+                    <div class="confidence-center"><div class="confidence-pct">93%</div><div class="confidence-sublabel">Confidence</div></div>
+                  </div>
+                  <div class="prediction-meta">
+                    <div><div class="meta-label">Severity Stage</div><div class="meta-value warning">Moderate</div></div>
+                    <div><div class="meta-label">Retina Affected</div><div class="meta-value accent">48%</div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-subtitle" style="margin-bottom:10px;">Additional Information</div>
+              <div class="scan-info-row"><span class="scan-info-key">Scan ID</span><span class="scan-info-val">SCN_2024_00128</span></div>
+              <div class="scan-info-row"><span class="scan-info-key">Scan Date</span><span class="scan-info-val">12 May 2024</span></div>
+              <div class="scan-info-row"><span class="scan-info-key">Patient ID</span><span class="scan-info-val">PT_00056</span></div>
+              <div class="scan-info-row"><span class="scan-info-key">Age / Gender</span><span class="scan-info-val">52 / Male</span></div>
+              <div style="display:flex;gap:8px;margin-top:14px;">
+                <button class="btn btn-outline btn-sm" style="flex:1;" type="button" onclick="switchModule('heatmap', document.querySelector('[onclick*=\'heatmap\']'))">View Heatmap</button>
+                <button class="btn btn-primary btn-sm" style="flex:1;" type="button" onclick="switchModule('reports', document.querySelector('[onclick*=\'reports\']'))">Generate Report</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Automated Retinal Biomarker Profiler (OCT Biometrics) -->
+          <div style="margin-top:20px;">
+            <div class="card-subtitle" style="margin-bottom:10px; display:flex; align-items:center; justify-content:space-between;">
+              <span>Automated Retinal Biomarker Profiler (OCT Biometrics)</span>
+              <span style="font-size:10px; color:var(--accent-light); font-weight:600;">Calibrated Axial Resolution: 3.9 µm/px</span>
+            </div>
+            
+            <div class="biomarker-grid">
+              <!-- CST -->
+              <div class="biomarker-card">
+                <div>
+                  <div class="biomarker-title">Central Subfield Thickness (CST)</div>
+                  <div class="biomarker-val" id="bio-cst-val">262 µm</div>
+                </div>
+                <div class="biomarker-status" id="bio-cst-status" style="color:var(--success);">
+                  <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:currentColor;"></span>
+                  Normal Foveal Profile
+                </div>
+              </div>
+
+              <!-- IRF -->
+              <div class="biomarker-card">
+                <div>
+                  <div class="biomarker-title">Intraretinal Fluid (IRF)</div>
+                  <div class="biomarker-val" id="bio-irf-val">Negative</div>
+                </div>
+                <div class="biomarker-status" id="bio-irf-status" style="color:var(--success);">
+                  <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:currentColor;"></span>
+                  No Cystoid Macular Edema
+                </div>
+              </div>
+
+              <!-- SRF / PED -->
+              <div class="biomarker-card">
+                <div>
+                  <div class="biomarker-title">Subretinal Fluid / PED</div>
+                  <div class="biomarker-val" id="bio-srf-val">Negative</div>
+                </div>
+                <div class="biomarker-status" id="bio-srf-status" style="color:var(--success);">
+                  <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:currentColor;"></span>
+                  Sub-RPE Space Preserved
+                </div>
+              </div>
+
+              <!-- EZ Integrity -->
+              <div class="biomarker-card">
+                <div>
+                  <div class="biomarker-title">Ellipsoid Zone (EZ) Integrity</div>
+                  <div class="biomarker-val" id="bio-ez-val" style="font-size:16px;">Intact</div>
+                </div>
+                <div class="biomarker-status" id="bio-ez-status" style="color:var(--success);">
+                  <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:currentColor;"></span>
+                  Photoreceptor Band Intact
+                </div>
+              </div>
+            </div>
+
+            <!-- Triage Urgency Deck -->
+            <div class="triage-banner" id="bio-triage-banner">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <div class="triage-beacon" id="bio-triage-beacon"></div>
+                <div>
+                  <div style="font-size:13px; font-weight:800; color:var(--text-primary);" id="bio-triage-title">Clinical Triage: Routine Screening</div>
+                  <div style="font-size:11px; color:var(--text-muted);" id="bio-triage-sub">No acute emergent retinal pathology. Recommended review interval: 12 Months.</div>
+                </div>
+              </div>
+              <div class="badge badge-success" id="bio-triage-badge" style="font-size:11px; padding:4px 12px; font-weight:700;">Routine</div>
+            </div>
+          </div>
+
+          <!-- 4. Ensemble Consensus & Epistemic Uncertainty Matrix -->
+          <div class="card" style="margin-top:20px;">
+            <div class="card-header">
+              <div class="card-title" style="display:flex; align-items:center; gap:8px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                Dual-Architecture Neural Consensus & Epistemic Uncertainty
+              </div>
+              <div class="badge badge-success" id="consensus-status-badge">100% Concordant</div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:16px; margin-top:10px;">
+              <!-- EfficientNet-B0 Card -->
+              <div style="background:var(--bg-elevated); padding:14px; border-radius:10px; border:1px solid var(--border);">
+                <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Model 1: EfficientNet-B0 (Weight: 60%)</div>
+                <div style="display:flex; justify-content:space-between; align-items:baseline; margin-top:6px;">
+                  <span id="consensus-eff-label" style="font-size:16px; font-weight:800; color:var(--text-primary);">NORMAL</span>
+                  <span id="consensus-eff-conf" style="font-family:'DM Mono',monospace; font-size:14px; color:#0284c7; font-weight:700;">80.2%</span>
+                </div>
+                <div style="height:4px; width:100%; background:var(--border); border-radius:2px; margin-top:8px; overflow:hidden;">
+                  <div id="consensus-eff-bar" style="height:100%; width:80.2%; background:#0284c7;"></div>
+                </div>
+              </div>
+
+              <!-- MobileNet-V3 Card -->
+              <div style="background:var(--bg-elevated); padding:14px; border-radius:10px; border:1px solid var(--border);">
+                <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Model 2: MobileNet-V3 (Weight: 40%)</div>
+                <div style="display:flex; justify-content:space-between; align-items:baseline; margin-top:6px;">
+                  <span id="consensus-mob-label" style="font-size:16px; font-weight:800; color:var(--text-primary);">NORMAL</span>
+                  <span id="consensus-mob-conf" style="font-family:'DM Mono',monospace; font-size:14px; color:#10b981; font-weight:700;">79.1%</span>
+                </div>
+                <div style="height:4px; width:100%; background:var(--border); border-radius:2px; margin-top:8px; overflow:hidden;">
+                  <div id="consensus-mob-bar" style="height:100%; width:79.1%; background:#10b981;"></div>
+                </div>
+              </div>
+
+              <!-- Epistemic Uncertainty Card -->
+              <div style="background:var(--bg-elevated); padding:14px; border-radius:10px; border:1px solid var(--border);">
+                <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Epistemic Uncertainty Score</div>
+                <div style="display:flex; justify-content:space-between; align-items:baseline; margin-top:6px;">
+                  <span id="consensus-entropy-val" style="font-family:'DM Mono',monospace; font-size:16px; font-weight:800; color:var(--text-primary);">0.082 nats</span>
+                  <span id="consensus-rating-badge" style="font-size:10px; font-weight:700; color:var(--success);">High Reliability</span>
+                </div>
+                <div style="font-size:10px; color:var(--text-muted); margin-top:8px;">Normalized Shannon Entropy across Kermany feature space</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5. 3D Macular Topography & ETDRS Macular Map -->
+          <div class="card" style="margin-top:20px;">
+            <div class="card-header">
+              <div>
+                <div class="card-title" style="display:flex; align-items:center; gap:8px;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                  Interactive 3D Macular Topography & ETDRS Subfield Thickness Map
+                </div>
+                <div class="card-subtitle">Real-time 3D retinal surface elevation mesh and ETDRS standard 9-zone thickness metrics in micrometers (µm)</div>
+              </div>
+              <div style="display:flex; gap:6px;">
+                <button class="btn btn-outline btn-sm" onclick="reset3DCamera()" style="font-size:11px; height:30px;">Reset 3D View</button>
+              </div>
+            </div>
+
+            <div class="grid-2" style="margin-top:14px; gap:20px; align-items:center;">
+              <!-- Left: ETDRS Bullseye Graphic -->
+              <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; background:var(--bg-elevated); padding:20px; border-radius:12px; border:1px solid var(--border);">
+                <div style="font-size:12px; font-weight:700; color:var(--text-secondary); margin-bottom:12px; text-transform:uppercase; letter-spacing:0.5px;">ETDRS 9-Zone Macular Grid (µm)</div>
+                <div style="position:relative; width:220px; height:220px; border-radius:50%; border:2px solid var(--border-strong); display:flex; align-items:center; justify-content:center; background:rgba(2,132,199,0.03);">
+                  <!-- Outer Zones -->
+                  <div style="position:absolute; top:8px; font-size:11px; font-weight:700; color:var(--text-primary);" id="etdrs-outer-sup">285</div>
+                  <div style="position:absolute; bottom:8px; font-size:11px; font-weight:700; color:var(--text-primary);" id="etdrs-outer-inf">280</div>
+                  <div style="position:absolute; left:8px; font-size:11px; font-weight:700; color:var(--text-primary);" id="etdrs-outer-nas">295</div>
+                  <div style="position:absolute; right:8px; font-size:11px; font-weight:700; color:var(--text-primary);" id="etdrs-outer-temp">270</div>
+
+                  <!-- Inner Ring (3mm) -->
+                  <div style="position:relative; width:130px; height:130px; border-radius:50%; border:1.5px solid #38bdf8; display:flex; align-items:center; justify-content:center; background:rgba(56,189,248,0.06);">
+                    <div style="position:absolute; top:6px; font-size:11px; font-weight:700; color:#0284c7;" id="etdrs-inner-sup">325</div>
+                    <div style="position:absolute; bottom:6px; font-size:11px; font-weight:700; color:#0284c7;" id="etdrs-inner-inf">320</div>
+                    <div style="position:absolute; left:6px; font-size:11px; font-weight:700; color:#0284c7;" id="etdrs-inner-nas">330</div>
+                    <div style="position:absolute; right:6px; font-size:11px; font-weight:700; color:#0284c7;" id="etdrs-inner-temp">310</div>
+
+                    <!-- Central Fovea (1mm) -->
+                    <div style="width:60px; height:60px; border-radius:50%; background:#0284c7; color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:0 0 10px rgba(2,132,199,0.4);">
+                      <span style="font-size:9px; font-weight:600; text-transform:uppercase; opacity:0.85;">Fovea</span>
+                      <span style="font-size:13px; font-weight:800;" id="etdrs-central">262</span>
+                    </div>
+                  </div>
+                </div>
+                <div style="font-size:10px; color:var(--text-muted); margin-top:14px; text-align:center;">Outer Ring: 6mm • Inner Ring: 3mm • Central Fovea: 1mm</div>
+              </div>
+
+              <!-- Right: Plotly 3D Macular Surface -->
+              <div>
+                <div id="plotly-3d-surface" style="width:100%; height:320px; border-radius:10px; overflow:hidden;"></div>
+                <div style="font-size:10px; color:var(--text-muted); text-align:center; margin-top:4px;">🖱️ Click & Drag to rotate 3D retinal mesh • Scroll to zoom elevation</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- HEATMAP -->
+        <div class="module" id="mod-heatmap">
+          <!-- PACS Clinical Adjustments Toolbar -->
+          <div class="pacs-toolbar">
+            <span style="font-size:11px; font-weight:800; color:var(--accent-light); text-transform:uppercase; letter-spacing:0.5px;">🔬 PACS B-Scan Controls:</span>
+            <div class="pacs-tool-group">
+              <span>☀️ Brightness</span>
+              <input type="range" id="heat-pacs-bright" min="-80" max="80" value="0" class="pacs-slider" oninput="updatePacsFilters('heat')">
+            </div>
+            <div class="pacs-tool-group">
+              <span>◐ Contrast</span>
+              <input type="range" id="heat-pacs-contrast" min="60" max="220" value="100" class="pacs-slider" oninput="updatePacsFilters('heat')">
+            </div>
+            <button class="btn btn-outline btn-sm" id="btn-heat-invert" onclick="togglePacsInvert('heat')" style="height:28px; font-size:11px; padding:0 10px;">Invert / Negative</button>
+            <button class="btn btn-outline btn-sm" id="btn-heat-caliper" onclick="toggleCaliper('heat')" style="height:28px; font-size:11px; padding:0 10px;">📏 Caliper (µm)</button>
+            <button class="btn btn-outline btn-sm" onclick="resetPacs('heat')" style="height:28px; font-size:11px; padding:0 8px;">Reset</button>
+            <span style="font-size:11px; color:var(--text-muted); margin-left:auto;">Drag slider to reveal raw scan vs Grad-CAM</span>
+          </div>
+
+          <!-- Interactive Curtain Reveal PACS Viewer -->
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-header">
+              <div class="card-title">Synchronized Curtain Reveal: Original Scan ↔ Grad-CAM Heatmap</div>
+              <span class="badge badge-info" style="font-size:10px;">Interactive Split View</span>
+            </div>
+            <div class="pacs-curtain-container" id="heat-curtain-container">
+              <!-- Under: Grad-CAM Heatmap -->
+              <div class="pacs-curtain-under" id="heat-curtain-under">
+                <div class="oct-scan-placeholder" style="height:100%;"><div class="oct-layers"><div class="oct-layer oct-layer-1"></div><div class="oct-layer oct-layer-2"></div></div></div>
+              </div>
+              <!-- Over: Original B-Scan -->
+              <div class="pacs-curtain-over" id="heat-curtain-over">
+                <div class="oct-scan-placeholder" style="height:100%;"><div class="oct-layers"><div class="oct-layer oct-layer-1"></div><div class="oct-layer oct-layer-2"></div></div></div>
+              </div>
+              <!-- Divider -->
+              <div class="pacs-curtain-divider" id="heat-curtain-divider">
+                <div class="pacs-curtain-handle">↔</div>
+              </div>
+              <!-- Caliper Canvas Overlay -->
+              <canvas class="caliper-canvas" id="heat-caliper-canvas"></canvas>
+              <div class="caliper-readout" id="heat-caliper-readout">0 µm</div>
+            </div>
+          </div>
+
+          <div class="grid-col-5-7">
+            <div class="card">
+              <div class="card-header"><div class="card-title">Original OCT Image</div></div>
+              <div class="image-preview-box">
+                <div class="oct-scan-placeholder">
+                  <div class="oct-layers"><div class="oct-layer oct-layer-1"></div><div class="oct-layer oct-layer-2"></div><div class="oct-layer oct-layer-3"></div></div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><div class="card-title">Grad-CAM Heatmap Focus</div><button class="btn btn-secondary btn-sm" onclick="exportHeatmapImage()">Export</button></div>
+              <div class="heatmap-image">
+                <div class="heatmap-base">
+                  <div class="oct-scan-placeholder" style="height:100%;opacity:0.7;"><div class="oct-layers"><div class="oct-layer oct-layer-1"></div><div class="oct-layer oct-layer-2"></div></div></div>
+                  <div class="heatmap-overlay"></div>
+                </div>
+              </div>
+              <div class="heatmap-scale">
+                <span class="heatmap-scale-label">Low Saliency</span>
+                <div class="heatmap-gradient"></div>
+                <span class="heatmap-scale-label">High Saliency (Focal Pathology)</span>
+              </div>
+              <div style="margin-top:14px;padding:12px;background:var(--bg-elevated);border-radius:8px;border:1px solid var(--border);">
+                <div class="card-subtitle" style="margin-bottom:6px;">Clinical Explanation</div>
+                <p style="font-size:12px;color:var(--text-secondary);line-height:1.6;">The gradient-weighted class activation map (Grad-CAM) highlights retinal neurosensory regions that exerted the highest neural weight during ensemble classification. Warm amber and crimson contours correspond to focal biomarker lesions.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SEGMENTATION -->
+        <div class="module" id="mod-segmentation">
+          <!-- PACS Clinical Adjustments Toolbar -->
+          <div class="pacs-toolbar">
+            <span style="font-size:11px; font-weight:800; color:var(--accent-light); text-transform:uppercase; letter-spacing:0.5px;">🔬 Retinal Boundary PACS Controls:</span>
+            <div class="pacs-tool-group">
+              <span>☀️ Brightness</span>
+              <input type="range" id="seg-pacs-bright" min="-80" max="80" value="0" class="pacs-slider" oninput="updatePacsFilters('seg')">
+            </div>
+            <div class="pacs-tool-group">
+              <span>◐ Contrast</span>
+              <input type="range" id="seg-pacs-contrast" min="60" max="220" value="100" class="pacs-slider" oninput="updatePacsFilters('seg')">
+            </div>
+            <button class="btn btn-outline btn-sm" id="btn-seg-invert" onclick="togglePacsInvert('seg')" style="height:28px; font-size:11px; padding:0 10px;">Invert / Negative</button>
+            <button class="btn btn-outline btn-sm" id="btn-seg-caliper" onclick="toggleCaliper('seg')" style="height:28px; font-size:11px; padding:0 10px;">📏 Caliper (µm)</button>
+            <button class="btn btn-outline btn-sm" onclick="resetPacs('seg')" style="height:28px; font-size:11px; padding:0 8px;">Reset</button>
+            <span style="font-size:11px; color:var(--text-muted); margin-left:auto;">Drag slider to peel segmentation contours over OCT</span>
+          </div>
+
+          <!-- Interactive Curtain Reveal PACS Viewer for Segmentation -->
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-header">
+              <div class="card-title">Synchronized Curtain Reveal: Original Scan ↔ Multi-Layer Segmentation</div>
+              <span class="badge badge-success" style="font-size:10px;">Layer Stratification</span>
+            </div>
+            <div class="pacs-curtain-container" id="seg-curtain-container">
+              <!-- Under: Segmentation Mask -->
+              <div class="pacs-curtain-under" id="seg-curtain-under">
+                <div class="oct-scan-placeholder" style="height:100%;"><div class="oct-layers"><div class="oct-layer oct-layer-1"></div><div class="oct-layer oct-layer-2"></div></div></div>
+              </div>
+              <!-- Over: Original B-Scan -->
+              <div class="pacs-curtain-over" id="seg-curtain-over">
+                <div class="oct-scan-placeholder" style="height:100%;"><div class="oct-layers"><div class="oct-layer oct-layer-1"></div><div class="oct-layer oct-layer-2"></div></div></div>
+              </div>
+              <!-- Divider -->
+              <div class="pacs-curtain-divider" id="seg-curtain-divider">
+                <div class="pacs-curtain-handle">↔</div>
+              </div>
+              <!-- Caliper Canvas Overlay -->
+              <canvas class="caliper-canvas" id="seg-caliper-canvas"></canvas>
+              <div class="caliper-readout" id="seg-caliper-readout">0 µm</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><div class="card-title">Retinal Layer Multi-View</div><button class="btn btn-secondary btn-sm" onclick="exportSegMask()">Export Mask</button></div>
+            <div class="seg-image-row">
+              <div class="seg-image"><div class="oct-scan-placeholder" style="height:100%;"><div class="oct-layers"><div class="oct-layer oct-layer-1"></div><div class="oct-layer oct-layer-2"></div><div class="oct-layer oct-layer-3"></div></div></div><div class="seg-label">Original OCT</div></div>
+              <div class="seg-image" style="background:#030508;position:relative;"><div class="seg-label">Segmentation Mask</div></div>
+              <div class="seg-image" style="background:#030508;position:relative;"><div class="seg-label">Overlay</div></div>
+            </div>
+            <div class="grid-2">
+              <div>
+                <div class="card-subtitle" style="margin-bottom:8px;">Quantitative Layer Profiling</div>
+                <div class="seg-details-grid">
+                  <div class="seg-detail-row"><span class="seg-detail-key">Lesion Area</span><span class="seg-detail-val">0.00%</span></div>
+                  <div class="seg-detail-row"><span class="seg-detail-key">Fluid Area</span><span class="seg-detail-val">0.00%</span></div>
+                  <div class="seg-detail-row"><span class="seg-detail-key">Edema Area</span><span class="seg-detail-val">0.00%</span></div>
+                  <div class="seg-detail-row"><span class="seg-detail-key">Total Affected</span><span class="seg-detail-val">0.00%</span></div>
+                </div>
+              </div>
+              <div>
+                <div class="card-subtitle" style="margin-bottom:8px;">Clinical Diagnostic Legend</div>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <div class="seg-legend-item"><div class="seg-legend-dot" style="background:#10b981"></div><span class="seg-legend-text">ILM / RPE Intact Boundaries (Green)</span></div>
+                  <div class="seg-legend-item"><div class="seg-legend-dot" style="background:#06b6d4"></div><span class="seg-legend-text">Intraretinal Fluid Cysts / DME (Cyan)</span></div>
+                  <div class="seg-legend-item"><div class="seg-legend-dot" style="background:#ef4444"></div><span class="seg-legend-text">Choroidal Neovascular Membrane / CNV (Crimson)</span></div>
+                  <div class="seg-legend-item"><div class="seg-legend-dot" style="background:#d946ef"></div><span class="seg-legend-text">Sub-RPE Drusen Nodules (Magenta)</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- REPORTS -->
+        <div class="module" id="mod-reports">
+          <div class="grid-2">
+            <div class="report-card" id="report-en">
+              <div class="report-header">
+                <div class="report-title-container">
+                  <div class="report-title">Medical Analysis Report (English)</div>
+                  <div class="report-status">Report status unavailable</div>
+                </div>
+                <button class="btn btn-primary btn-sm btn-download-report">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                  Download PDF
+                </button>
+              </div>
+              
+              <div class="report-images-container">
+                <div class="report-images-grid">
+                  <div class="report-preview-orig">
+                    <div class="oct-scan-placeholder" style="position:absolute;inset:0;opacity:0.6;"></div>
+                    <div class="report-preview-label">Original OCT</div>
+                  </div>
+                  <div class="report-preview-heat">
+                    <div class="oct-scan-placeholder" style="position:absolute;inset:0;opacity:0.6;"></div>
+                    <div class="report-preview-label">Grad-CAM Heatmap</div>
+                  </div>
+                  <div class="report-preview-seg">
+                    <div class="oct-scan-placeholder" style="position:absolute;inset:0;opacity:0.6;"></div>
+                    <div class="report-preview-label">Segmentation</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="report-meta-grid">
+                <div class="report-meta-item">
+                  <div class="report-meta-label">Patient Name (Click to Edit)</div>
+                  <div class="report-meta-value" contenteditable="true" id="edit-patient-name-en">Ramesh Kumar</div>
+                </div>
+                <div class="report-meta-item">
+                  <div class="report-meta-label">Patient ID</div>
+                  <div class="report-meta-value" style="font-family:'DM Mono',monospace;font-size:12px;">PT_00056</div>
+                </div>
+                <div class="report-meta-item">
+                  <div class="report-meta-label">Age / Gender</div>
+                  <div class="report-meta-value">52 / Male</div>
+                </div>
+                <div class="report-meta-item">
+                  <div class="report-meta-label">Scan Date</div>
+                  <div class="report-meta-value">12 May 2024</div>
+                </div>
+              </div>
+              
+              <div class="report-section">
+                <div class="report-section-title">Clinical Diagnosis Summary</div>
+                <div class="report-meta-grid" style="margin-bottom:0;">
+                  <div class="report-meta-item"><div class="report-meta-label">Condition</div><div class="report-meta-value">Diabetic Macular Edema (DME)</div></div>
+                  <div class="report-meta-item"><div class="report-meta-label">Severity Stage</div><div class="report-meta-value" style="color:var(--warning);">Moderate</div></div>
+                  <div class="report-meta-item"><div class="report-meta-label">Retina Affected</div><div class="report-meta-value">48%</div></div>
+                  <div class="report-meta-item"><div class="report-meta-label">Confidence Score</div><div class="report-meta-value">93%</div></div>
+                </div>
+              </div>
+              
+              <div class="report-section">
+                <div class="report-section-title">Clinical Findings</div>
+                <p class="report-text">The OCT scan indicates signs of fluid accumulation in the macular region with moderate retinal thickening. The condition is consistent with Diabetic Macular Edema.</p>
+              </div>
+              
+              <div class="report-section" style="margin-bottom:0;">
+                <div class="report-section-title">Recommendations & Care Plan</div>
+                <p class="report-text">Regular follow-up with a retina specialist is recommended. Maintain good blood sugar control and follow a healthy lifestyle as advised by your physician.</p>
+              </div>
+            </div>
+            
+            <div class="report-card" id="report-ta">
+              <div class="report-header">
+                <div class="report-title-container">
+                  <div class="report-title">மருத்துவ பகுப்பாய்வு அறிக்கை (தமிழ்)</div>
+                  <div class="report-status">Report status unavailable</div>
+                </div>
+                <button class="btn btn-primary btn-sm btn-download-report">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                  PDF பதிவிறக்கம்
+                </button>
+              </div>
+              
+              <div class="report-images-container">
+                <div class="report-images-grid">
+                  <div class="report-preview-orig">
+                    <div class="oct-scan-placeholder" style="position:absolute;inset:0;opacity:0.6;"></div>
+                    <div class="report-preview-label">அசல் OCT</div>
+                  </div>
+                  <div class="report-preview-heat">
+                    <div class="oct-scan-placeholder" style="position:absolute;inset:0;opacity:0.6;"></div>
+                    <div class="report-preview-label">வெப்ப வரைபடம்</div>
+                  </div>
+                  <div class="report-preview-seg">
+                    <div class="oct-scan-placeholder" style="position:absolute;inset:0;opacity:0.6;"></div>
+                    <div class="report-preview-label">பாதிப்புப் பகுதி</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="report-meta-grid">
+                <div class="report-meta-item">
+                  <div class="report-meta-label">நோயாளி பெயர் (திருத்த கிளிக் செய்க)</div>
+                  <div class="report-meta-value" contenteditable="true" id="edit-patient-name-ta">ரமேஷ் குமார்</div>
+                </div>
+                <div class="report-meta-item">
+                  <div class="report-meta-label">நோயாளி அடையாள எண்</div>
+                  <div class="report-meta-value" style="font-family:'DM Mono',monospace;font-size:12px;">PT_00056</div>
+                </div>
+                <div class="report-meta-item">
+                  <div class="report-meta-label">வயது / பாலினம்</div>
+                  <div class="report-meta-value">52 / ஆண்</div>
+                </div>
+                <div class="report-meta-item">
+                  <div class="report-meta-label">கண்டறிந்த தேதி</div>
+                  <div class="report-meta-value">12 மே 2024</div>
+                </div>
+              </div>
+              
+              <div class="report-section">
+                <div class="report-section-title">மருத்துவ நோயறிதல் சுருக்கம்</div>
+                <div class="report-meta-grid" style="margin-bottom:0;">
+                  <div class="report-meta-item"><div class="report-meta-label">கண்டறியப்பட்ட நோய்</div><div class="report-meta-value">நீரிழிவு மஸ்குலார் எடிமா (DME)</div></div>
+                  <div class="report-meta-item"><div class="report-meta-label">தீவிரம்</div><div class="report-meta-value" style="color:var(--warning);">மிதமான</div></div>
+                  <div class="report-meta-item"><div class="report-meta-label">கண் பாதிப்பு</div><div class="report-meta-value">48%</div></div>
+                  <div class="report-meta-item"><div class="report-meta-label">நம்பிக்கை மதிப்பீடு</div><div class="report-meta-value">93%</div></div>
+                </div>
+              </div>
+              
+              <div class="report-section">
+                <div class="report-section-title">மருத்துவ கண்டுபிடிப்புகள்</div>
+                <p class="report-text">OCT ஸ்கேன் மூலம் மாகுலார் பகுதியில் திரவம் திரண்டிருப்பதும் மிதமான விழித்திரை தடிமனாவதும் கண்டறியப்பட்டது.</p>
+              </div>
+              
+              <div class="report-section" style="margin-bottom:0;">
+                <div class="report-section-title">பரிந்துரைகள் & பராமரிப்பு திட்டம்</div>
+                <p class="report-text">தொடர்ச்சியான விழித்திரை நிபுணரின் பரிசோதனை அவசியம். இரத்த சர்க்கரை அளவை கட்டுப்படுத்தி ஆரோக்கியமான வாழ்க்கை முறையை பின்பற்றவும்.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- HISTORY -->
+        <div class="module" id="mod-history">
+          <div class="card">
+            <div class="card-header" style="margin-bottom: 20px;">
+              <div class="card-title" style="font-family:'Outfit',sans-serif; font-size:18px; font-weight:800; color:var(--accent-light); display:flex; align-items:center; gap:8px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle; opacity:0.8;"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Scan History Registry
+              </div>
+            </div>
+            
+            <!-- Filter & Action Bar -->
+            <div class="filter-bar" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; gap:16px; flex-wrap:wrap; background:rgba(255,255,255,0.02); padding:12px 16px; border-radius:12px; border:1px solid var(--border);">
+              <!-- Search Input with inline-styled SVG (Eliminating Black Circle) -->
+              <div class="search-input-wrap" style="position: relative; display: flex; align-items: center; flex: 1; max-width: 300px; width: 100%;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2.5" style="position: absolute; left: 12px; width: 14px; height: 14px; pointer-events: none;"><circle cx="11" cy="11" r="8" fill="none" stroke="var(--text-muted)" stroke-width="2.5"/><line x1="21" y1="21" x2="16.65" y2="16.65" stroke="var(--text-muted)" stroke-width="2.5"/></svg>
+                <input id="history-search" class="form-input" type="text" placeholder="Search patients..." style="padding: 10px 12px 10px 36px; border-radius: 8px; font-size: 13px; background: var(--bg-elevated); border: 1px solid var(--border-strong); color: var(--text-primary); outline: none; width: 100%; transition: all 0.3s ease;" oninput="renderHistoryPage()">
+              </div>
+              
+              <!-- Action Buttons -->
+              <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                <button id="history-compare-btn" class="btn btn-primary btn-sm" type="button" disabled onclick="compareSelectedScans()" style="display:flex; align-items:center; gap:6px; height:36px; font-size:12px; font-weight:600; padding:0 14px; border-radius:8px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>Compare (0)</button>
+                <button id="history-delete-patient" class="btn btn-secondary btn-sm" type="button" style="display:flex; align-items:center; gap:6px; height:36px; font-size:12px; font-weight:600; padding:0 14px; border-radius:8px; background:var(--bg-elevated); border:1px solid var(--border-strong); color:var(--text-primary);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4" fill="none"/><line x1="23" y1="11" x2="17" y2="11"></line></svg>Delete Patient</button>
+                <button id="history-clear-all" class="btn btn-danger btn-sm" type="button" style="display:flex; align-items:center; gap:6px; height:36px; font-size:12px; font-weight:600; padding:0 14px; border-radius:8px; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); color:#f87171;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>Clear All</button>
+                <button id="history-export" class="btn btn-outline btn-sm" type="button" style="display:flex; align-items:center; gap:6px; height:36px; font-size:12px; font-weight:600; padding:0 14px; border-radius:8px; border-color:var(--border-strong);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Export CSV</button>
+              </div>
+            </div>
+            <table class="data-table">
+              <thead><tr><th style="width: 40px; text-align: center;">Select</th><th>Scan ID</th><th>Patient Name</th><th>Disease</th><th>Severity</th><th>Date</th><th>Affected %</th><th>Actions</th></tr></thead>
+              <tbody id="history-tbody"></tbody>
+            </table>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);">
+              <span id="history-count" style="font-size:11px;color:var(--text-muted);">No records</span>
+              <div style="display:flex;gap:6px;"><button class="btn btn-secondary btn-sm">Previous</button><button class="btn btn-primary btn-sm">Next</button></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI CHATBOT -->
+        <div class="module" id="mod-chatbot">
+          <div class="card" style="display:flex; flex-direction:column; height:calc(100vh - 140px); margin-bottom:0; padding:0; overflow:hidden;">
+            <div class="card-header" style="padding: 18px 24px; border-bottom:1px solid var(--border); background:rgba(255,255,255,0.01);">
+              <div style="display:flex; align-items:center; gap:14px;">
+                <div style="position:relative; width:44px; height:44px; flex-shrink:0;">
+                  <img src="/images/ai_doctor.jpg" alt="Dr. Elena Vance" style="width:100%; height:100%; border-radius:50%; object-fit:cover; border:2px solid var(--accent); box-shadow:0 0 12px var(--accent-glow);">
+                  <div style="position:absolute; bottom:1px; right:1px; width:11px; height:11px; border-radius:50%; background:var(--success); border:2px solid var(--bg-card); box-shadow:0 0 6px var(--success);"></div>
+                </div>
+                <div>
+                  <div class="card-title" style="font-size:15px; font-weight:800; font-family:'Outfit',sans-serif; color:var(--text-primary); display:flex; align-items:center; gap:8px;">
+                    Dr. Elena Vance — Clinical Retina AI Specialist
+                    <span class="badge badge-success" style="font-size:9px; padding:2px 6px;">Online</span>
+                  </div>
+                  <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Retrieval-Augmented Medical Knowledge Engine • English / தமிழ் / Tanglish</div>
+                </div>
+              </div>
+              <button class="btn btn-outline btn-sm" id="btn-clear-chat" style="padding:6px 12px; font-size:11px;">Clear Conversation</button>
+            </div>
+            
+            <!-- Chat history area -->
+            <div id="chat-messages" style="flex:1; overflow-y:auto; padding:24px; display:flex; flex-direction:column; gap:16px; background:rgba(0,0,0,0.03);">
+              <!-- Bot greeting message -->
+              <div style="display:flex; gap:12px; max-width:80%; align-self:flex-start;">
+                <div style="width:36px; height:36px; border-radius:50%; overflow:hidden; flex-shrink:0; border:1px solid var(--accent); box-shadow:0 2px 6px var(--accent-glow);">
+                  <img src="/images/ai_doctor.jpg" alt="AI Specialist" style="width:100%; height:100%; object-fit:cover;">
+                </div>
+                <div>
+                  <div style="background:var(--bg-elevated); border:1px solid var(--border); padding:14px 18px; border-radius: 0 16px 16px 16px; font-size:13px; line-height:1.5; color:var(--text-primary);">
+                    Hello! I am Dr. Elena Vance, your VisionCare AI Clinical Assistant. I can help answer your questions about retinal diseases, diagnostic findings, treatment options, and OCT scan interpretation in English, Tamil (தமிழ்), or Tanglish. 
+                    <br/><br/>
+                    How can I assist you with your clinical assessment today?
+                  </div>
+                  <div style="font-size:10px; color:var(--text-muted); margin-top:4px; margin-left:4px;">Just now</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Suggestions -->
+            <div style="padding:12px 24px; background:rgba(255,255,255,0.01); border-top:1px solid var(--border); display:flex; gap:8px; flex-wrap:wrap;">
+              <span style="font-size:11px; color:var(--text-muted); align-self:center; margin-right:8px; font-weight:600;">Suggestions:</span>
+              <button class="chat-suggest-btn" onclick="sendSuggestion('What is DME?')">What is DME?</button>
+              <button class="chat-suggest-btn" onclick="sendSuggestion('CSCR ku symptoms enna?')">CSCR ku symptoms enna?</button>
+              <button class="chat-suggest-btn" onclick="sendSuggestion('விழித்திரை விலகல் சிகிச்சை என்ன?')">விழித்திரை விலகல் சிகிச்சை என்ன?</button>
+              <button class="chat-suggest-btn" onclick="sendSuggestion('How to prevent AMD?')">How to prevent AMD?</button>
+            </div>
+
+            <!-- Attachment Status Area -->
+            <div id="chat-attachment-status" style="display:none; padding:8px 24px; background:rgba(124,58,237,0.1); border-top:1px solid var(--border); align-items:center; justify-content:space-between; gap:12px;">
+              <div style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-secondary);">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                <span id="chat-attachment-name" style="font-weight:600; color:var(--text-primary);">filename.pdf</span>
+                <span id="chat-attachment-size" style="opacity:0.7;">(120 KB)</span>
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="clearChatAttachment()" style="padding:4px 8px; font-size:10px; height:auto; margin-top:0 !important; border-color:rgba(239,68,68,0.4); color:#ef4444;">Remove</button>
+            </div>
+
+            <!-- Input area -->
+            <div style="padding:18px 24px; border-top:1px solid var(--border); background:var(--bg-card); display:flex; gap:12px; align-items:center; width:100%;">
+              <button class="btn btn-outline" id="chat-attach-btn" onclick="document.getElementById('chat-file-input').click()" style="padding:14px; border-radius:12px; height:48px; width:48px !important; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:0 !important; border-color:var(--border-strong); background:var(--bg-elevated);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+              </button>
+              <button class="btn btn-outline" id="chat-mic-btn" onclick="toggleSpeechRecognition()" style="padding:14px; border-radius:12px; height:48px; width:48px !important; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:0 !important; border-color:var(--border-strong); background:var(--bg-elevated); color:var(--text-primary); transition: all 0.3s ease;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" id="chat-mic-icon"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+              </button>
+              <input type="file" id="chat-file-input" style="display:none;" onchange="handleChatFileUpload(this)">
+              
+              <div style="flex:1;">
+                <input id="chat-input" type="text" class="form-input" placeholder="Ask a question, or attach a file and ask questions about it..." style="padding: 14px 18px; border-radius:12px; font-size:14px; background:var(--bg-elevated) !important; color:var(--text-primary) !important; border:1px solid var(--border-strong); outline:none; width:100%; transition:all 0.3s ease; display:block;" onkeydown="if(event.key==='Enter') sendMessage()">
+              </div>
+              
+              <button class="btn btn-primary" id="chat-send-btn" onclick="sendMessage()" style="padding:14px 24px; border-radius:12px; font-size:14px; font-weight:600; display:flex; align-items:center; gap:6px; height:48px; width:auto !important; flex-shrink:0; margin-top:0 !important;">
+                Send
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SETTINGS -->
+        <div class="module" id="mod-settings">
+          <div class="grid-2" style="gap:20px;">
+            <div>
+              <div class="card" style="margin-bottom:16px;">
+                <div class="card-header"><div class="card-title">Appearance</div></div>
+                <div class="settings-section">
+                  <div class="settings-item-label">Theme</div>
+                  <div style="display:flex;gap:10px;">
+                    <div class="theme-option" id="theme-dark" onclick="setTheme('dark')" style="flex:1;"><div class="theme-swatch dark"></div>Dark</div>
+                    <div class="theme-option" id="theme-light" onclick="setTheme('light')" style="flex:1;"><div class="theme-swatch light"></div>Light</div>
+                  </div>
+                </div>
+                
+              <div class="card">
+                <div class="card-header"><div class="card-title">Account</div></div>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <button class="btn btn-secondary" style="width:100%;justify-content:flex-start;" onclick="document.getElementById('modal-change-pw').style.display='flex'">Change Password</button>
+                  <button class="btn btn-secondary" style="width:100%;justify-content:flex-start;" onclick="openUpdateProfile()">Update Profile</button>
+                  <button class="btn btn-danger" style="width:100%;justify-content:flex-start;" onclick="document.getElementById('modal-delete-acc').style.display='flex'">Delete Account</button>
+                </div>
+              </div>
+
+              <!-- Change Password Modal -->
+              <div id="modal-change-pw" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.55);align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+                <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:28px;width:380px;max-width:90vw;box-shadow:0 20px 50px rgba(0,0,0,0.3);">
+                  <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:18px;">🔒 Change Password</div>
+                  <div id="pw-msg" style="display:none;padding:8px 12px;border-radius:8px;font-size:12px;margin-bottom:12px;"></div>
+                  <div style="display:flex;flex-direction:column;gap:12px;">
+                    <input id="pw-old" type="password" placeholder="Current Password" class="form-input" style="width:100%;box-sizing:border-box;">
+                    <input id="pw-new" type="password" placeholder="New Password" class="form-input" style="width:100%;box-sizing:border-box;">
+                    <input id="pw-confirm" type="password" placeholder="Confirm New Password" class="form-input" style="width:100%;box-sizing:border-box;">
+                  </div>
+                  <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end;">
+                    <button class="btn btn-secondary" onclick="closeModal('modal-change-pw')">Cancel</button>
+                    <button class="btn btn-primary" onclick="submitChangePassword()">Change Password</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Update Profile Modal -->
+              <div id="modal-update-profile" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.55);align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+                <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:28px;width:380px;max-width:90vw;box-shadow:0 20px 50px rgba(0,0,0,0.3);">
+                  <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:18px;">👤 Update Profile</div>
+                  <div id="profile-msg" style="display:none;padding:8px 12px;border-radius:8px;font-size:12px;margin-bottom:12px;"></div>
+                  <div style="display:flex;flex-direction:column;gap:12px;">
+                    <label style="font-size:12px;color:var(--text-muted);">Full Name</label>
+                    <input id="profile-name" type="text" placeholder="Full Name" class="form-input" style="width:100%;box-sizing:border-box;">
+                    <label style="font-size:12px;color:var(--text-muted);">Email Address</label>
+                    <input id="profile-email" type="email" placeholder="Email Address" class="form-input" style="width:100%;box-sizing:border-box;">
+                  </div>
+                  <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end;">
+                    <button class="btn btn-secondary" onclick="closeModal('modal-update-profile')">Cancel</button>
+                    <button class="btn btn-primary" onclick="submitUpdateProfile()">Save Changes</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Delete Account Modal -->
+              <div id="modal-delete-acc" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.55);align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+                <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:28px;width:380px;max-width:90vw;box-shadow:0 20px 50px rgba(0,0,0,0.3);">
+                  <div style="font-size:16px;font-weight:700;color:var(--danger);margin-bottom:8px;">⚠️ Delete Account</div>
+                  <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">This action is <strong>permanent</strong>. All your scans, reports, and patient data will be deleted forever. Enter your account password (or type <strong>DELETE</strong>) to confirm.</p>
+                  <div id="del-msg" style="display:none;padding:8px 12px;border-radius:8px;font-size:12px;margin-bottom:12px;"></div>
+                  <input id="del-password" type="password" placeholder="Enter password or type DELETE to confirm" class="form-input" style="width:100%;box-sizing:border-box;">
+                  <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end;">
+                    <button class="btn btn-secondary" onclick="closeModal('modal-delete-acc')">Cancel</button>
+                    <button class="btn btn-danger" onclick="submitDeleteAccount()">Delete My Account</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+              <div class="card">
+                <div class="card-header"><div class="card-title">About VisionCare</div></div>
+                <div class="about-row"><span class="about-key">Version</span><span class="about-val">1.0.0</span></div>
+                <div class="about-row"><span class="about-key">Developed By</span><span class="about-val">VisionCare Team</span></div>
+                <div class="about-row"><span class="about-key">Contact</span><span class="about-val">support@visioncare.com</span></div>
+                <div class="about-row"><span class="about-key">License</span><span class="about-val">Hospital Edition</span></div>
+                <div class="about-row"><span class="about-key">Model</span><span class="about-val">ResNet-50 v2</span></div>
+                <div class="about-row"><span class="about-key">Last Updated</span><span class="about-val">May 2024</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const MODULE_META = {
+  dashboard:    { title: 'Dashboard Overview',   crumb: 'VisionCare / Dashboard' },
+  upload:       { title: 'Upload OCT Scan',      crumb: 'VisionCare / Upload OCT' },
+  prediction:   { title: 'AI Prediction',        crumb: 'VisionCare / AI Prediction' },
+  heatmap:      { title: 'Grad-CAM Heatmap',     crumb: 'VisionCare / Heatmap' },
+  segmentation: { title: 'Retinal Segmentation', crumb: 'VisionCare / Segmentation' },
+  reports:      { title: 'Medical Reports',      crumb: 'VisionCare / Reports' },
+  history:      { title: 'Scan History',         crumb: 'VisionCare / History' },
+  chatbot:      { title: 'AI Clinical Assistant', crumb: 'VisionCare / Assistant' },
+  settings:     { title: 'System Settings',      crumb: 'VisionCare / Settings' },
+};
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function showMain() {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('main-app').classList.add('active');
+  updateThemeOptions();
+}
+
+function logout() {
+  document.getElementById('main-app').classList.remove('active');
+  showPage('page-login');
+}
+
+function switchModule(name, el) {
+  document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
+  const targetMod = document.getElementById('mod-' + name);
+  if (targetMod) targetMod.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (el) {
+    el.classList.add('active');
+  } else {
+    const matchingNav = document.querySelector(`.nav-item[onclick*="'${name}'"]`);
+    if (matchingNav) matchingNav.classList.add('active');
+  }
+  const meta = MODULE_META[name];
+  if (meta) {
+    const t = document.getElementById('header-title');
+    const c = document.getElementById('header-crumb');
+    if (t) t.textContent = meta.title;
+    if (c) c.textContent = meta.crumb;
+  }
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  setTheme(current === 'dark' ? 'light' : 'dark');
+}
+
+function setTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  updateThemeOptions();
+}
+
+function updateThemeOptions() {
+  const current = document.documentElement.getAttribute('data-theme');
+  const d = document.getElementById('theme-dark');
+  const l = document.getElementById('theme-light');
+  if (d && l) {
+    d.classList.toggle('selected', current === 'dark');
+    l.classList.toggle('selected', current === 'light');
+  }
+}
+
+function simulateUpload() {
+  document.getElementById('file-info').innerHTML = `
+    <div class="file-info-row"><span class="file-info-key">File Name</span><span class="file-info-val">sample_oct.png</span></div>
+    <div class="file-info-row"><span class="file-info-key">File Type</span><span class="file-info-val">PNG</span></div>
+    <div class="file-info-row"><span class="file-info-key">File Size</span><span class="file-info-val">2.45 MB</span></div>
+    <div class="file-info-row"><span class="file-info-key">Resolution</span><span class="file-info-val">1024x512</span></div>
+  `;
+  document.getElementById('validation-status').style.display = 'flex';
+}
+
+document.addEventListener('DOMContentLoaded', updateThemeOptions);
+</script>
+  <!-- Comparison Modal -->
+  <div id="modal-scan-compare" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.65);align-items:center;justify-content:center;backdrop-filter:blur(6px);">
+    <div style="background:var(--bg-card);border:1px solid var(--border-strong);border-radius:16px;padding:28px;width:1050px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;gap:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);padding-bottom:12px;">
+        <div style="font-size:18px;font-weight:700;color:var(--text-primary);font-family:'Outfit',sans-serif;">🔬 Longitudinal Scan Comparison</div>
+        <button class="btn btn-secondary btn-sm" onclick="closeModal('modal-scan-compare')" style="margin-top:0 !important; width:auto !important;">Close</button>
+      </div>
+      
+      <!-- Patient Check Banner -->
+      <div id="compare-patient-warning" style="display:none;padding:10px 14px;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.25);border-radius:8px;font-size:13px;color:var(--warning);font-weight:600;">
+        ⚠️ Warning: Selected scans belong to different patients.
+      </div>
+      
+      <!-- Side by Side Layout -->
+      <div class="grid-2">
+        <!-- Scan 1 (Older/First) -->
+        <div class="card" style="padding:16px; margin:0;">
+          <div style="font-size:13px;font-weight:700;color:var(--accent-light);margin-bottom:8px;text-transform:uppercase;">Scan A (Baseline)</div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:12px;">
+            <span id="compare-a-name" style="font-weight:600;">Patient A</span>
+            <span id="compare-a-date" style="color:var(--text-muted);">2026-06-01</span>
+          </div>
+          <div style="aspect-ratio:16/9;background:#030508;border-radius:8px;overflow:hidden;border:1px solid var(--border);position:relative;margin-bottom:10px;">
+            <img id="compare-a-img" style="width:100%;height:100%;object-fit:cover;">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;">
+            <div>Diagnosis: <span id="compare-a-diagnosis" style="font-weight:600;">NORMAL</span></div>
+            <div>Severity: <span id="compare-a-severity" style="font-weight:600;">Normal</span></div>
+            <div>Affected %: <span id="compare-a-affected" style="font-weight:600;font-family:'DM Mono';">0%</span></div>
+            <div>Confidence: <span id="compare-a-confidence" style="font-weight:600;font-family:'DM Mono';">0%</span></div>
+          </div>
+        </div>
+
+        <!-- Scan 2 (Newer/Second) -->
+        <div class="card" style="padding:16px; margin:0;">
+          <div style="font-size:13px;font-weight:700;color:var(--success);margin-bottom:8px;text-transform:uppercase;">Scan B (Follow-up)</div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:12px;">
+            <span id="compare-b-name" style="font-weight:600;">Patient B</span>
+            <span id="compare-b-date" style="color:var(--text-muted);">2026-06-07</span>
+          </div>
+          <div style="aspect-ratio:16/9;background:#030508;border-radius:8px;overflow:hidden;border:1px solid var(--border);position:relative;margin-bottom:10px;">
+            <img id="compare-b-img" style="width:100%;height:100%;object-fit:cover;">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;">
+            <div>Diagnosis: <span id="compare-b-diagnosis" style="font-weight:600;">NORMAL</span></div>
+            <div>Severity: <span id="compare-b-severity" style="font-weight:600;">Normal</span></div>
+            <div>Affected %: <span id="compare-b-affected" style="font-weight:600;font-family:'DM Mono';">0%</span></div>
+            <div>Confidence: <span id="compare-b-confidence" style="font-weight:600;font-family:'DM Mono';">0%</span></div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Deltas/Metrics Cards & Chart -->
+      <div style="display:grid;grid-template-columns:4fr 8fr;gap:20px;">
+        <div class="card" style="padding:16px;display:flex;flex-direction:column;gap:12px;margin:0;">
+          <div style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:4px;text-transform:uppercase;">Clinical Deltas</div>
+          
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg-elevated);border-radius:8px;">
+            <span style="font-size:12px;color:var(--text-muted);">Severity Shift</span>
+            <span id="delta-stage-badge" class="badge">None</span>
+          </div>
+          
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg-elevated);border-radius:8px;">
+            <span style="font-size:12px;color:var(--text-muted);">Lesion Delta</span>
+            <span id="delta-lesion" style="font-family:'DM Mono';font-size:13px;font-weight:700;">0%</span>
+          </div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg-elevated);border-radius:8px;">
+            <span style="font-size:12px;color:var(--text-muted);">Fluid Delta</span>
+            <span id="delta-fluid" style="font-family:'DM Mono';font-size:13px;font-weight:700;">0%</span>
+          </div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg-elevated);border-radius:8px;">
+            <span style="font-size:12px;color:var(--text-muted);">Edema Delta</span>
+            <span id="delta-edema" style="font-family:'DM Mono';font-size:13px;font-weight:700;">0%</span>
+          </div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg-elevated);border-radius:8px;">
+            <span style="font-size:12px;color:var(--text-muted);">Total Affected Delta</span>
+            <span id="delta-total" style="font-family:'DM Mono';font-size:13px;font-weight:700;">0%</span>
+          </div>
+        </div>
+        
+        <!-- Plotly chart for pathology thickness profiles compared -->
+        <div class="card" style="padding:16px;margin:0;">
+          <div style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:8px;text-transform:uppercase;">Thickness Profiles Overlay</div>
+          <div id="plotly-compare-thickness-chart" style="height:220px;width:100%;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script src="/js/api.js"></script>
+</body>
+</html>
