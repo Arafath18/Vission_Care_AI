@@ -8,9 +8,28 @@ import re
 import urllib.parse
 import numpy as np
 from typing import Any, Optional, Dict, List
-from sentence_transformers import SentenceTransformer
-import faiss
-from langchain_core.prompts import PromptTemplate
+
+try:
+    from sentence_transformers import SentenceTransformer
+    import faiss
+    HAS_FAISS = True
+except ImportError:
+    SentenceTransformer = None
+    faiss = None
+    HAS_FAISS = False
+
+try:
+    from langchain_core.prompts import PromptTemplate
+except ImportError:
+    class PromptTemplate:
+        def __init__(self, input_variables=None, template=""):
+            self.template = template
+            self.input_variables = input_variables or []
+        def format(self, **kwargs):
+            t = self.template
+            for k, v in kwargs.items():
+                t = t.replace(f"{{{k}}}", str(v))
+            return t
 
 # Trusted Medical Knowledge Base
 RAG_KNOWLEDGE_BASE = {
@@ -273,12 +292,20 @@ class ConversationBufferMemory:
 # Real RAG FAISS Vector Store
 class RetinalFAISSIndex:
     def __init__(self):
-        print("[FAISS] Loading SentenceTransformer('BAAI/bge-small-en-v1.5')...")
-        self.model = SentenceTransformer('BAAI/bge-small-en-v1.5')
         self.chunks: List[str] = []
         self.chunk_metadata: List[Dict[str, Any]] = []
         self._build_chunks()
-        self._build_index()
+        self.has_real_faiss = False
+        if HAS_FAISS and SentenceTransformer is not None and faiss is not None:
+            try:
+                print("[FAISS] Loading SentenceTransformer('BAAI/bge-small-en-v1.5')...")
+                self.model = SentenceTransformer('BAAI/bge-small-en-v1.5')
+                self._build_index()
+                self.has_real_faiss = True
+            except Exception as e:
+                print(f"[FAISS] Warning: fallback to lexical vector matcher ({e})")
+        else:
+            print("[FAISS] Using built-in semantic/lexical similarity matcher.")
 
     def _build_chunks(self):
         for key, data in RAG_KNOWLEDGE_BASE.items():
@@ -345,19 +372,34 @@ class RetinalFAISSIndex:
         print("[FAISS] Real FAISS L2 vector store initialized successfully.")
 
     def similarity_search(self, query: str, k: int = 3) -> List[Dict[str, Any]]:
-        query_vector = self.model.encode([query], show_progress_bar=False)
-        query_vector = np.array(query_vector).astype('float32')
-        distances, indices = self.index.search(query_vector, k)
-        
-        results = []
-        for i, idx in enumerate(indices[0]):
-            if idx < len(self.chunks):
-                results.append({
-                    "metadata": self.chunk_metadata[idx],
-                    "source": self.chunk_metadata[idx]["source"],
-                    "distance": float(distances[0][i])
-                })
-        return results
+        if self.has_real_faiss:
+            query_vector = self.model.encode([query], show_progress_bar=False)
+            query_vector = np.array(query_vector).astype('float32')
+            distances, indices = self.index.search(query_vector, k)
+            results = []
+            for i, idx in enumerate(indices[0]):
+                if idx < len(self.chunks):
+                    results.append({
+                        "metadata": self.chunk_metadata[idx],
+                        "source": self.chunk_metadata[idx]["source"],
+                        "distance": float(distances[0][i])
+                    })
+            return results
+
+        # Fast lexical and semantic keyword matcher fallback
+        q_words = set(re.findall(r'\w+', query.lower()))
+        scores = []
+        for idx, chunk in enumerate(self.chunks):
+            c_words = set(re.findall(r'\w+', chunk.lower()))
+            overlap = len(q_words & c_words)
+            scores.append((overlap, idx))
+        scores.sort(key=lambda x: x[0], reverse=True)
+        top = scores[:k]
+        return [{
+            "metadata": self.chunk_metadata[idx],
+            "source": self.chunk_metadata[idx]["source"],
+            "distance": float(1.0 / (overlap + 1e-4))
+        } for overlap, idx in top]
 
 # Prompt Template definition (LangChain Style)
 RAG_PROMPT_TEMPLATE = PromptTemplate(
